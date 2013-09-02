@@ -1,4 +1,1 @@
-thesis
-======
-
-My Master's Thesis in Computer Science
+This is my Master's Thesis in Computer Science: "Light modelling on the GPU".
