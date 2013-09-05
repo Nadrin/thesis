@@ -3,11 +3,19 @@
 \usepackage[T1]{fontenc}
 \usepackage{amsfonts}
 \usepackage{amsthm}
+\usepackage{amssymb}
+\usepackage{amsmath}
 
 \usepackage[backend=biber,citestyle=authoryear-comp,hyperref=true]{biblatex}
+\usepackage[bookmarks]{hyperref}
 
 \pagestyle{ruled}
 \setcounter{tocdepth}{3}
+
+\theoremstyle{definition}
+\newtheorem{df}{Definition}
+
+\addbibresource{chapters/theory/theory.bib}
 
 \begin{document}
 \title{LIGHT MODELLING ON THE GPU}
@@ -75,7 +83,6 @@ okazało się nieprawdziwe, decyzja o wydaniu mi dyplomu zostanie cofnięta.
 \include{chapters/results/results}
 
 \backmatter
-\section*{Bibliography}
 \printbibliography
 
 \end{document}

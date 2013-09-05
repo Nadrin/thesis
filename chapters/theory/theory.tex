@@ -2,6 +2,45 @@
 
 \section{Useful mathematical concepts}
 
+\begin{df}[Spherical coordinates]
+In spherical coordinate system position of a point $P$ in 3D space is described by values: $r$, $\theta$ and $\phi$, where:
+\begin{itemize}
+\item $r \geq 0$ (\emph{radial distance}) is the Euclidean distance from the origin to $P$.
+\item $0 \leq \theta \leq \pi$ (\emph{polar angle}) is the angle between $OP$ line segment and a fixed axis ($OZ$).
+\item $0 \leq \phi \leq 2\pi$ (\emph{azimuth angle}) is the angle between other axis ($OX$) and orthogonal projection of $OP$ on the reference plane ($XY$).
+\end{itemize}
+A point in spherical coordinates $(r, \theta, \phi)$ can be converted into cartesian coordinates $(x, y, z)$ as follows:
+\begin{eqnarray}
+  x &=& r \sin \theta \cos \phi \nonumber \\
+  y &=& r \sin \theta \sin \phi \\
+  z &=& r \cos \theta \nonumber
+\end{eqnarray}
+\end{df}
+
+\begin{df}[Solid angle]
+Solid angle subtended by an object visible from point $P$ is the area of that object projected onto a unit sphere around $P$. Solid angles are measured in \emph{steradians} $[sr]$. The entire sphere subtends a solid angle of $4\pi$.
+\end{df}
+
+In this work I will, by convention, denote a unit direction vector anchored at some point $P$ in space by $\omega$. Every such vector can be expressed by a point on a unit sphere in spherical coordinates:
+\begin{equation}
+  \omega(\theta,\phi) := \langle \sin\theta\cos\phi, \sin\theta\sin\phi, \cos\theta \rangle.
+\end{equation}
+Consider a differntial surface element $dS$ on a unit sphere spanning from $\theta$ to $\theta + d\theta$ and from $\phi$ to $\phi + d\phi$. Differential area of $dS$ (and also, by definition, solid angle subtended by it) is then
+\begin{equation}
+  d\omega = \frac{\sin\theta d\theta d\phi}{r^{2}} = \sin\theta d\theta d\phi.
+\end{equation}
+This relationship is the key to converting integrals over solid angles to integrals over directions.
+
+\begin{df}[Projected solid angle]
+Projected solid angle \parencite{nicodemus1976} of an object $S$ measured from point $P$ is the solid angle of $S$ projected onto a unit disk perpendicular to the surface normal vector $\vec{N}(P)$ at $P$. Since $\vec{N}(P)$ defines the orientation of the projection plane the projected solid angle is cosine-weighted solid angle of $S$:
+\begin{equation}
+  \omega^{\perp} = |\cos\theta| \cdot \omega ,
+\end{equation}
+where $\theta$ is the angle between $\omega$ and surface normal at $P$.
+\end{df}
+
+
+
 \section{Radiometry and photometry}
 
 \section{Reflection models}

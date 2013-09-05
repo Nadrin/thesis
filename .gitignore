@@ -1,2 +1,13 @@
 build
 *.aux
+*.bbl
+*.xml
+*.dvi
+*.pdf
+*.bcf
+*.blg
+*.fls
+*.log
+*.out
+*.toc
+*.fdb*

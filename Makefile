@@ -1,21 +1,16 @@
 .DEFAULT_GOAL = dvi
-.PHONY: all clean prepare
+.PHONY: all clean
 
-TEXCOMPILE=rubber --cache
+TEXCOMPILE=latexmk
 MAINFILE=thesis
-BUILDDIR=build
 
 all: dvi pdf
 
-prepare:
-	mkdir -p $(BUILDDIR)
-	ln -sf ../chapters $(BUILDDIR)/
+dvi:
+	$(TEXCOMPILE) $(MAINFILE)
 
-dvi: prepare
-	$(TEXCOMPILE) --into $(BUILDDIR) $(MAINFILE)
-
-pdf: prepare
-	$(TEXCOMPILE) --into $(BUILDDIR) --pdf $(MAINFILE)
+pdf:
+	$(TEXCOMPILE) -pdf $(MAINFILE)
 
 clean:
-	rm -rf $(BUILDDIR)
+	$(TEXCOMPILE) -C $(MAINFILE)
