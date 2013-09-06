@@ -39,9 +39,20 @@ Projected solid angle \parencite{nicodemus1976} of an object $S$ measured from p
 where $\theta$ is the angle between $\omega$ and surface normal at $P$.
 \end{df}
 
+\section{Simulation assumptions}
+Simulating light propagation in 3D scenes is very computationaly intensive task. It is generally reasonable to make certain assumptions about the nature of light or the scene itself that can drastically reduce algorithm complexity and speed up simulation without sacrificing noticable image quality. Some physical phenomena are insignificant at macroscopic scale or their effects are too miniscule relative to added simulation complexity.
 
+The following properties are implicitly assumed for the rest of this work:
+\begin{itemize}
+\item Light transport is considered in the context of \emph{geometric optics} on macroscopic scale (quantumn effects are ignored).
+\item Light travels in vaccum with no participating media and is unpolarized.
+\item Light consists of radiation at single, fixed wavelength (spectral effects, such as dispersion, are ignored).
+\end{itemize}
 
-\section{Radiometry and photometry}
+\section{Radiometric quantities}
+The natural basis for study of light transport in computer graphics is the field of \emph{radiometry} and, by lesser extent, \emph{photometry}.
+
+Radiometry is the study of electromagnetic radiation (which, of course, incldues visible light spectrum) and its interaction with matter. Photometry, on the other hand, studies human perception of light. Defining key radiometric quantities is necessary for proper understanding of light transport theory.
 
 \section{Reflection models}
 
