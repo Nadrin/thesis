@@ -25,14 +25,14 @@ In this work I will, by convention, denote a unit direction vector anchored at s
 \begin{equation}
   \omega(\theta,\phi) := \langle \sin\theta\cos\phi, \sin\theta\sin\phi, \cos\theta \rangle.
 \end{equation}
-Consider a differntial surface element $dS$ on a unit sphere spanning from $\theta$ to $\theta + d\theta$ and from $\phi$ to $\phi + d\phi$. Differential area of $dS$ (and also, by definition, solid angle subtended by it) is then
+Consider a differntial surface element $dS$ on a unit sphere spanning from $\theta$ to $\theta + d\theta$ and from $\phi$ to $\phi + d\phi$. Differential area of a set of directions $d\omega$ (or, equivalently, solid angle subtended by $dS$) is then
 \begin{equation}
   d\omega = \frac{\sin\theta d\theta d\phi}{r^{2}} = \sin\theta d\theta d\phi.
 \end{equation}
 This relationship is the key to converting integrals over solid angles to integrals over directions.
 
 \begin{df}[Projected solid angle]
-Projected solid angle \parencite{nicodemus1976} of an object $S$ measured from point $P$ is the solid angle of $S$ projected onto a unit disk perpendicular to the surface normal vector $\vec{N}(P)$ at $P$. Since $\vec{N}(P)$ defines the orientation of the projection plane the projected solid angle is cosine-weighted solid angle of $S$:
+Projected solid angle \parencite{nicodemus76} of an object $S$ measured from point $P$ is the solid angle of $S$ projected onto a unit disk perpendicular to the surface normal vector $\vec{N}(P)$ at $P$. Since $\vec{N}(P)$ defines the orientation of the projection plane the projected solid angle is cosine-weighted solid angle of $S$:
 \begin{equation}
   \omega^{\perp} = |\cos\theta| \cdot \omega ,
 \end{equation}
@@ -46,13 +46,58 @@ The following properties are implicitly assumed for the rest of this work:
 \begin{itemize}
 \item Light transport is considered in the context of \emph{geometric optics} on macroscopic scale (quantumn effects are ignored).
 \item Light travels in vaccum with no participating media and is unpolarized.
-\item Light consists of radiation at single, fixed wavelength (spectral effects, such as dispersion, are ignored).
+\item Light consists of radiation of mixed wavelengths and spectral effects, such as dispersion, are ignored.
+\item The scene is in the state of energy equilibrium. 
 \end{itemize}
 
 \section{Radiometric quantities}
 The natural basis for study of light transport in computer graphics is the field of \emph{radiometry} and, by lesser extent, \emph{photometry}.
 
 Radiometry is the study of electromagnetic radiation (which, of course, incldues visible light spectrum) and its interaction with matter. Photometry, on the other hand, studies human perception of light. Defining key radiometric quantities is necessary for proper understanding of light transport theory.
+
+Unless noted otherwise definitions in this section are based on chapter one of \cite{mccluney94}.
+
+\begin{df}
+Radiant power $[W=J \cdot s^{-1}]$ (or \emph{radiant flux}) is total amount of energy passing through a surface per unit time.
+\begin{equation}
+  \Phi := \frac{dQ}{dt}
+\end{equation}
+\end{df}
+
+\begin{df}
+Intensity $[W \cdot sr^{-1}]$ is radiant flux density per unit solid angle.
+\begin{equation}
+  I := \frac{d\Phi}{d\omega}
+\end{equation}
+It describes directional distribution of light and is only meaningful for point or small light sources.
+\end{df}
+
+\begin{df}
+Irradiance $[W \cdot m^{-2}]$ is  area density of radiant flux arriving at a surface around point $x$.
+\begin{equation}
+  E(x) := \frac{d\Phi(x)}{dA(x)}
+\end{equation}
+Although formal definition of irradiance includes both sides of the surface in the measurement, for the purpose of computer graphics it is more convenient to consider only the side with normal vector $N(x)$ pointing outwards thus irradiance measures incident radiant flux in the upper hemisphere around point $x$.
+\end{df}
+
+\begin{df}
+Radiant exitance $[W \cdot m^{-2}]$ \parencite{nicodemus78} is area density of radiant flux leaving a surface around point $x$.
+\begin{equation}
+  M(x) := \frac{d\Phi(x)}{dA(x)}
+\end{equation}
+Radiant exitance is analogous to irradiance but measures outgoing radiant flux around point $x$.
+\end{df}
+
+\begin{df}
+Radiance $[W \cdot m^{-2} \cdot sr^{-1}]$ is radiant flux density per unit area per unit solid angle. It is measured on a differential surface perpendicular to $\omega$ and around point $x$.
+\begin{equation}
+  L(x,\omega) := \frac{d^{2}\Phi(x, \omega)}{dA(x) |\cos\theta| d\omega},
+\end{equation}
+where $\theta$ is the angle between $\omega$ and surface normal $\vec{N}(x)$. Radiance can also be formulated by using the dot product of $\omega$ and surface normal:
+\begin{equation}
+  L(x, \omega) := \frac{d^{2}\Phi(x, \omega)}{|\omega \cdot \vec{N}(x)| dA(x) d\omega}.
+\end{equation}
+\end{df}
 
 \section{Reflection models}
 
