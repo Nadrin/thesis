@@ -39,6 +39,17 @@ Projected solid angle \parencite{nicodemus76} of an object $S$ measured from poi
 where $\theta$ is the angle between $\omega$ and surface normal at $P$. 
 \end{df}
 
+\begin{df}[Dirac's delta]
+  Dirac's delta function \parencite{dirac58} is a generalized function defined over real numbers that is zero everywhere except at the origin. It can be thought of as an infinitely high, infinitely thin spike at $x=0$ with unit area under the curve.
+\begin{equation}
+  \int_{-\infty}^{\infty} \delta(x) dx = 1.
+\end{equation}
+One particularly useful property of the delta function is
+\begin{equation}
+  \int_{-\infty}^{\infty} \delta(x - x_{0}) f(x) dx = f(x_{0}).
+\end{equation}
+\end{df}
+
 \section{Simulation assumptions}
 \label{sec:assumptions}
 Simulating light propagation in 3D scenes is very computationaly intensive task. It is generally reasonable to make certain assumptions about the nature of light or the scene itself that can drastically reduce algorithm complexity and speed up simulation without sacrificing noticable image quality. Some physical phenomena are insignificant at macroscopic scale or their effects are too miniscule relative to added simulation complexity.
@@ -104,12 +115,10 @@ It is often useful to distinguish between radiance arraving at a surface and rad
 \begin{equation}
   L_{i}(x, \omega) = L_{o}(x, -\omega).
 \end{equation}
-In the rest of this work 
 
-\section{Reflection models}
+\section{The BRDF}
 The next step in formulating mathematical model for light transport is the introduction of the \emph{bidirectional reflectance distribution function} or BRDF for short. The formulation here is based on \cite{veach97}.
 
-\subsection{The BRDF}
 Let $x$ be a point on a surface with corresponding normal vector $N(x)$. Consider an outgoing direction $\omega_{o}$ and exitant radiance $L_{o}(x, \omega_{o})$. For a fixed incoming direction $\omega_{i}$ the irradiance due to incident light from an infinitesimal cone $d\omega_{i}$ around $\omega_{i}$ is
 \begin{equation}
   dE(x, \omega_{i}) = L_{i}(x, \omega_{i}) |\cos\theta_{i}| d\omega_{i}.
@@ -142,8 +151,52 @@ Directional--hemispherical reflectance \parencite{sillion94} is the fraction of 
 \end{equation}
 \end{df}
 
+\section{Fresnel reflectance}
+Fresnel equations describe the amount of incoming light that is reflected off a surface. Those equations are different depending on whether given surface is a dielectric or a conductor and also depend on direction of light polarization.
+
+\begin{df}[Snell's law]
+Snell's law describes the relationship between the angle of incident light and the angle of transmitted light on the surface boundary between media. It is of the form:
+\begin{equation}
+  \eta_{i} \sin\theta_{i} = \eta_{t} \sin\theta_{t},
+\end{equation}
+where $\eta_{i}$, $\eta_{t}$ are indices of refraction of incident and transmitted media and $\theta_{i}$, $\theta_{t}$ are the corresponding angles between surface normal vector and incident and transmitted direction vectors.
+\end{df}
+
+Recall from section \ref{sec:assumptions} that light is assumed to be unpolarized. To get \emph{Fresnel reflectance} for unpolarized light it is sufficient to take the average of fresnel reflectance for each polarization direction.
+
+\begin{df}
+Let $r_{\parallel}$ be the Fresnel reflectance for parallel polarized light and $r_{\perp}$ be the Fresnel reflectance for perpendicular polarized light. Reflectance for unpolarized light is then:
+\begin{equation}
+  F_{r} = \frac{1}{2} (r_{\parallel} + r_{\perp}).
+\end{equation}
+\end{df}
+
+Dielectrics reflect a fraction of incident light and transmit the rest. For physically based Fresnel reflectance $F_{r} \in [0,1]$ thus the amount of reflected light is $F_{r}$ and the amount of transmitted is $1 - F_{r}$ as a consequence of conservation of energy.
+
+\begin{df}[Fresnel reflectance for dielectrics]
+An approximation of Fresnel reflectance for dielectric surfaces \parencite{phar2010} is of the form:
+\begin{eqnarray}
+r_{\parallel} &=& \left( \frac{\eta_{t} \cos\theta_{i} - \eta_{i} \cos\theta_{t}}{\eta_{t} \cos\theta_{i} + \eta_{i} \cos\theta_{t}} \right)^{2} \\
+r_{\perp} &=& \left( \frac{\eta_{i} \cos\theta_{i} - \eta_{t} \cos\theta_{t}}{\eta_{i} \cos\theta_{i} + \eta_{t} \cos\theta_{t}} \right)^{2},
+\end{eqnarray}
+where $\eta_{i}$ and $\eta_{t}$ are indices of refraction of incident and transmitted media, $\theta_{i}$ is the angle between surface normal and incident direction $\omega_{i}$ and $\theta_{t}$ is the angle between surface normal and transmitted direction $\omega_{t}$ computed with Snell's law.
+\end{df}
+
+Conductors, on the other hand, reflect a fraction of incident light absorbing the rest. The absorbed light is turned into heat.
+
+\begin{df}[Fresnel reflectance for conductors]
+An approximation of Fresnel reflectance for conducting surfaces \parencite{phar2010} is of the form:
+\begin{eqnarray}
+  r_{\parallel} &=& \frac{(\eta^{2} + k^{2}) \cos^{2}\theta_{i} - 2\eta\cos\theta_{i} + 1}{(\eta^{2} + k^{2}) \cos^{2}\theta_{i} + 2\eta\cos\theta_{i} + 1} \\
+  r_{\perp} &=& \frac{(\eta^{2} + k^{2}) - 2\eta\cos\theta_{i} + \cos^{2}\theta_{i}}{(\eta^{2} + k^{2}) + 2\eta\cos\theta_{i} + \cos^{2}\theta_{i}},
+\end{eqnarray}
+where $\eta$ is the index of refraction of the conductor, $k$ is the \emph{absorption coefficient} and $\theta_{i}$ is the angle between incident direction $\omega_{i}$ and surface normal.
+\end{df}
+
+\section{Reflection models}
+
 \subsection{Lambertian reflection}
-The simplest, yet widely used, reflection model is the \emph{Lambertian diffuse reflection}. Lambertian surfaces scatter incident light uniformly in all directions. While such ideal diffuse reflection is physically unplausable, in practice, it is fairly good approximation of many real life materials like matte plastic or clay.
+The simplest, yet widely used, reflection model is \emph{Lambertian diffuse reflection}. Lambertian surfaces scatter incident light uniformly in all directions. While such ideal diffuse reflection is physically unplausable, in practice, it is fairly good approximation of many real life materials like matte plastic or clay.
 
 Let $f_{d}$ be the BRDF of perfectly diffuse surface. Due to BRDF reciprocity $f_{d}(\omega_{o}, \omega_{i}) = f_{d}(\omega_{i}, \omega_{o})$, therefore $f_{d}$ is independent of both $\omega_{i}$ and $\omega_{o}$ and thus constant:
 \begin{equation}
@@ -157,12 +210,31 @@ Substitution into equation (\ref{eq:dhrefl}) yields \emph{diffuse reflectance} c
 \end{eqnarray}
 In terms of diffuse reflectance the Lambertian BRDF is then
 \begin{equation}
-  f_{d}(\omega_{o}, \omega_{i}) = \frac{\rho_{d}}{\pi}.
+  f_{d}(\omega_{o}, \omega_{i}) = \frac{1}{\pi} \rho_{d}.
 \end{equation}
 
 \subsection{Specular reflection}
+Another useful reflection model is \emph{perfect specular reflection}. Perfect specular surfaces are ideally smooth mirrors reflecting light in a single direction. Let $\omega_{i}(\theta_{i}, \phi_{i})$ be the incident light direction and let $\omega_{o}(\theta_{o}, \phi_{o})$ be the outgoing (reflected) light direction. Perfect specular reflection implies that:
+\begin{eqnarray}
+\label{eq:reflection}
+  \theta_{o} &=& \theta_{i} \nonumber \\
+  \phi_{o} &=& \phi_{i} \pm \pi.
+\end{eqnarray}
 
-\subsection{Fresnel reflectance}
+In terms of radiance, for physically based BRDF describing specular reflection \parencite{phar2010}:
+\begin{equation}
+  L_{o}(\omega_{o}) = f_{r}(\omega_{o}, \omega_{i}) L_{i}(\omega_{i}) = F_{r}(\omega_{i}) L_{i}(\omega_{i}),
+\end{equation}
+where $F_{r}$ is Fresnel reflectance. Since $\theta_{o} = \theta_{i}$, therefore $F_{r}(\omega_{i}) = F_{r}(\omega_{o})$.
+
+Let $f_{s}$ be the BRDF of perfectly specular surface. $f_{s}$ should have non-zero value only for $\omega_{i}$, $\omega_{o}$ direction pairs satisfying the condition imposed by equation (\ref{eq:reflection}). This can be expressed implicitly using a product of delta functions \parencite{cohen93}:
+\begin{eqnarray}
+  f_{s}(\omega_{o}, \omega_{i}) &=& f_{s}(\theta_{o}, \phi_{o}, \theta_{i}, \phi_{i}) \nonumber \\
+  &=& F_{r}(\theta_{i}, \phi_{i}) \frac{\delta(\cos\theta_{i} - \cos\theta_{o})}{|\cos\theta_{i}|} \delta(\phi_{i} - (\phi_{o} \pm \pi)).
+\end{eqnarray}
+
+Since $f_{s}$ is not a well-defined function it requires special handling during the implementation.
+
 
 \section{The light transport equation (LTE)}
 
