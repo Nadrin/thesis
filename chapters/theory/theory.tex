@@ -233,8 +233,22 @@ Let $f_{s}$ be the BRDF of perfectly specular surface. $f_{s}$ should have non-z
   &=& F_{r}(\theta_{i}, \phi_{i}) \frac{\delta(\cos\theta_{i} - \cos\theta_{o})}{|\cos\theta_{i}|} \delta(\phi_{i} - (\phi_{o} \pm \pi)).
 \end{eqnarray}
 
-Since $f_{s}$ is not a well-defined function it requires special handling during the implementation.
-
+Since $f_{s}$ is not a well-defined function it requires special handling in the implementation.
 
 \section{The light transport equation (LTE)}
+The light transport equation, sometimes also called the rendering equation, has been originaly formulated by \emph{James T. Kajiya} in \cite{kajiya86}. It describtes the equilibrium distribution of radiance in a scene. For every point it gives total reflected radiance in terms of emission from the surface, its BRDF and the distribution of incident illumination. Good formulation of the LTE is given, for example, in \cite{phar2010}:
+\begin{equation}
+  L_{o}(x, \omega_{o}) = L_{e}(x, \omega_{o}) + \int_{\Omega} f_{r}(x, \omega_{o}, \omega_{i}) L_{i}(x, \omega_{i}) |\cos\theta_{i}| d\omega_{i},
+\end{equation}
+where
+\begin{itemize}
+\item $L_{o}(x, \omega_{o})$ is the total outgoing radiance in direction $\omega_{o}$ from point $x$.
+\item $L_{e}(X, \omega_{e})$ is the outgoing radiance from point $x$ due to surface emission.
+\item $L_{i}(X, \omega_{i})$ is the total incident radiance on point $x$ from the hemisphere of directions $\Omega$ around that point.
+\item $f_{r}(x, \omega_{o}, \omega_{i})$ is the value of the BRDF of surface at point $x$ given incident and outgoing direction vectors.
+\item $\theta_{i}$ is the angle between incident radiance direction $\omega_{i}$ and surface normal at point $x$.
+\end{itemize}
 
+Solving the LTE is an area of active research in computer graphics. It cannot be computed analyticaly for any non-trivial scene and high dimensionality of the integral causes most of the numerical integration methods to converge very slowly to the approximate solution.
+
+One viable technique of solving the LTE is \emph{Monte Carlo integration} which will be explored in the next chapter.
