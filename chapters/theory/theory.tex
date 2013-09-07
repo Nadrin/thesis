@@ -36,10 +36,11 @@ Projected solid angle \parencite{nicodemus76} of an object $S$ measured from poi
 \begin{equation}
   \omega^{\perp} = |\cos\theta| \cdot \omega ,
 \end{equation}
-where $\theta$ is the angle between $\omega$ and surface normal at $P$.
+where $\theta$ is the angle between $\omega$ and surface normal at $P$. 
 \end{df}
 
 \section{Simulation assumptions}
+\label{sec:assumptions}
 Simulating light propagation in 3D scenes is very computationaly intensive task. It is generally reasonable to make certain assumptions about the nature of light or the scene itself that can drastically reduce algorithm complexity and speed up simulation without sacrificing noticable image quality. Some physical phenomena are insignificant at macroscopic scale or their effects are too miniscule relative to added simulation complexity.
 
 The following properties are implicitly assumed for the rest of this work:
@@ -99,11 +100,65 @@ where $\theta$ is the angle between $\omega$ and surface normal $\vec{N}(x)$. Ra
 \end{equation}
 \end{df}
 
+It is often useful to distinguish between radiance arraving at a surface and radiance leaving a surface. Throughout this work \emph{incident radiance} will be denoted by $L_{i}(x, \omega)$ while \emph{exitant radiance} will be denoted by $L_{o}(x, \omega)$. Following from assumptions in section \ref{sec:assumptions} it is easly seen that:
+\begin{equation}
+  L_{i}(x, \omega) = L_{o}(x, -\omega).
+\end{equation}
+In the rest of this work 
+
 \section{Reflection models}
+The next step in formulating mathematical model for light transport is the introduction of the \emph{bidirectional reflectance distribution function} or BRDF for short. The formulation here is based on \cite{veach97}.
 
 \subsection{The BRDF}
+Let $x$ be a point on a surface with corresponding normal vector $N(x)$. Consider an outgoing direction $\omega_{o}$ and exitant radiance $L_{o}(x, \omega_{o})$. For a fixed incoming direction $\omega_{i}$ the irradiance due to incident light from an infinitesimal cone $d\omega_{i}$ around $\omega_{i}$ is
+\begin{equation}
+  dE(x, \omega_{i}) = L_{i}(x, \omega_{i}) |\cos\theta_{i}| d\omega_{i}.
+\end{equation}
+Recall from section \ref{sec:assumptions} that the modelling of light in this work assumes principles of geometric optics, that includes linearity of light. From this assumption it follows that exitant radiance at $x$ in direction $\omega_{o}$ is linearly proportional to the irradiance
+\begin{equation}
+  dL_{o}(x, \omega_{o}) \propto dE(x, \omega_{i}).
+\end{equation}
+
+\begin{df}[BRDF]
+Bidirectional reflectance distribution function $[sr^{-1}]$ is the constant of proportionality of outgoing radiance due to irradiance at point $x$ on some surface.
+\begin{equation}
+  f_{r}(\omega_{o}, \omega_{i}) := \frac{dL_{o}(x, \omega_{o})}{dE(x, \omega_{i})} = \frac{dL_{o}(x, \omega_{o})}{L_{i}(x, \omega_{i}) |\cos\theta_{i}| d\omega_{i}}.
+\end{equation}
+\end{df}
+
+In other words BRDF is radiance leaving in direction $\omega_{o}$ per unit of irradiance arriving from $\omega_{i}$. Alternative notation for the BRDF function is $f_{r}(\omega_{i} \rightarrow \omega_{o})$.
+
+Physically based BRDFs have the following properties:
+\begin{itemize}
+\item \emph{Reciprocity}: For all pairs of directions $\omega_{i}$, $\omega_{o}$: $f_{r}(\omega_{o}, \omega_{i}) = f_{r}(\omega_{i}, \omega_{o})$.
+\item \emph{Energy conservation}: The total energy of reflected light is less than or equal to the enrgy of incident light.
+\end{itemize}
+
+\begin{df}
+Directional--hemispherical reflectance \parencite{sillion94} is the fraction of incident radiant flux density in a given direction that is reflected over the entire hemisphere of possible directions.
+\begin{equation}
+\label{eq:dhrefl}
+  \rho_{dh}(\omega_{i}) = \int_{\Omega} f_{r}(\omega_{o}, \omega_{i}) |\cos\theta_{o}| d\omega_{o}
+\end{equation}
+\end{df}
 
 \subsection{Lambertian reflection}
+The simplest, yet widely used, reflection model is the \emph{Lambertian diffuse reflection}. Lambertian surfaces scatter incident light uniformly in all directions. While such ideal diffuse reflection is physically unplausable, in practice, it is fairly good approximation of many real life materials like matte plastic or clay.
+
+Let $f_{d}$ be the BRDF of perfectly diffuse surface. Due to BRDF reciprocity $f_{d}(\omega_{o}, \omega_{i}) = f_{d}(\omega_{i}, \omega_{o})$, therefore $f_{d}$ is independent of both $\omega_{i}$ and $\omega_{o}$ and thus constant:
+\begin{equation}
+  f_{d}(\omega_{o}, \omega_{i}) = c.
+\end{equation}
+Substitution into equation (\ref{eq:dhrefl}) yields \emph{diffuse reflectance} coefficient:
+\begin{eqnarray}
+  \rho_{d} &=& c \int_{\Omega} |\cos\theta_{o}| d\omega_{o} \\
+  &=& c \int_{0}^{\pi} \int_{0}^{2\pi} |\cos\theta_{o}| \sin\theta_{o} d\theta_{o} d\phi_{o} \\
+  &=& c \pi.
+\end{eqnarray}
+In terms of diffuse reflectance the Lambertian BRDF is then
+\begin{equation}
+  f_{d}(\omega_{o}, \omega_{i}) = \frac{\rho_{d}}{\pi}.
+\end{equation}
 
 \subsection{Specular reflection}
 
