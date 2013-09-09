@@ -1,6 +1,44 @@
 \chapter{Monte Carlo integration}
+Monte Carlo integration is a method of approximating the value of an integral which is difficult or impossible to solve analytically, thus it is usually the solution of choice for approximating the \emph{light transport equation} \footnote{While there are other valid approaches to solving the LTE such as finite element methods (e.g. radiosity), those are not in the scope of this work.}. Due to the high dimensionality of the LTE integral traditional numerical integration methods like quadrature rules are inefficient and converge very slowly to the approximate solution.
 
 \section{The Monte Carlo estimator}
+Let $f: I \rightarrow \mathbb{R}$ be a real-valued function defined over the interval $I$ and $a,b \in I$. Monte Carlo integration is a mean to estimate the integral of the form:
+\begin{equation}
+  F = \int_{a}^{b} f(x)dx.
+\end{equation}
+
+The basis for deriving the Monte Carlo estimator is the \emph{mean value theorem} for integration:
+\begin{thm}
+If $f(x)$ is continuous over $[a, b]$, then there exists a number $c \in (a, b)$ such that:
+\begin{equation}
+\label{eq:meanvalue}
+  \frac{1}{b-a} \int_{a}^{b} f(x)dx = f(c).
+\end{equation}
+\end{thm}
+Rearranging the terms of equation \ref{eq:meanvalue} yields:
+\begin{equation}
+  \int_{a}^{b} f(x)dx = (b-a) \cdot f(c) = F,
+\end{equation}
+which has simple interpretation that the area under the curve is the width of its base $(b-a)$ times the average ``height'' $f(c)$. To estimate the value of $f(c)$ one could evalute the function $f(x)$ at random points in the interval $[a,b]$ and compute the average of the sum of samples.
+
+\begin{df}[Monte Carlo estimator]
+  Let $X_{i} \in [a,b]$ be a random variable drawn from some distribution with probability density function $p(X_{i})$ and let $f: I \rightarrow \mathbb{R}$ be a function defined over the interval $I$, and $a,b \in I$. The Monte Carlo estimator has the form \parencite{veach97}:
+\begin{equation}
+  F_{N} = \frac{1}{N} \sum_{i=1}^{N} \frac{f(X_{i})}{p(X_{i})}.
+\end{equation}
+\end{df}
+With that definition the expected value of the estimator $F_{N}$ is the value of the integral $F$:
+\begin{eqnarray}
+  E[F_{N}] &=& E\left[ \frac{1}{N} \sum_{i=1}^{N} \frac{f(X_{i})}{p(X_{i})} \right]
+  = \frac{1}{N} \sum_{i=1}^{N} E \left[ \frac{f(X_{i})}{p(X_{i})} \right] = \nonumber \\
+  &=& \frac{1}{N} \sum_{i=1}^{N} \int_{a}^{b} \frac{f(x)}{p(x)} p(x) dx
+  = \frac{1}{N} \sum_{i=1}^{N} \int_{a}^{b} f(x) dx = \nonumber \\
+  &=& \int_{a}^{b} f(x)dx = F.
+\end{eqnarray}
+For functions with higher number of dimensions random samples $X_{i}$ are drawn from \emph{joint probability density function}.
+
+Average case rate of convergence for Monte Carlo estimator is $O(\sqrt{N})$, where $N$ is the number of samples taken. Formal variance and error analysis of Monte Carlo integration is out of scope of this work. Treatment of this topic can be found in \cite{robert2004}.
+\vfill
 
 \section{Sampling from arbitrary distributions}
 
