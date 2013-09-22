@@ -24,6 +24,7 @@ which has simple interpretation that the area under the curve is the width of it
 \begin{df}[Monte Carlo estimator]
   Let $X_{i} \in [a,b]$ be a random variable drawn from some distribution with probability density function $p(X_{i})$ and let $f: I \rightarrow \mathbb{R}$ be a function defined over the interval $I$, and $a,b \in I$. The Monte Carlo estimator has the form \parencite{veach97}:
 \begin{equation}
+\label{eq:mcestimator}
   F_{N} = \frac{1}{N} \sum_{i=1}^{N} \frac{f(X_{i})}{p(X_{i})}.
 \end{equation}
 \end{df}
@@ -38,11 +39,28 @@ With that definition the expected value of the estimator $F_{N}$ is the value of
 For functions with higher number of dimensions random samples $X_{i}$ are drawn from \emph{joint probability density function}.
 
 Average case rate of convergence for Monte Carlo estimator is $O(\sqrt{N})$, where $N$ is the number of samples taken. Formal variance and error analysis of Monte Carlo integration is out of scope of this work. Treatment of this topic can be found in \cite{robert2004}.
-\vfill
 
 \section{Sampling from arbitrary distributions}
+Vast majority of pseudo-random number generation algorithms output numbers drawn from \emph{standard uniform distribution}. Random variable with such distribution is commonly written as $\xi \in [0,1)$ and it takes on all values in its domain with equal probability.
+
+Ability to draw random samples from chosen probability distribution is crucial in order to evaluate the Monte Carlo estimator in equation \ref{eq:mcestimator}. This section will present basics of drawing samples from arbitrary distributions given only samples drawn from the standard uniform distribution.
 
 \subsection{The inversion method}
+The inversion method or the \emph{inverse transform sampling} \parencite{devroye86} is a method of generating samples according to some distribution by transforming the canonical uniform random variable $\xi$.
+\begin{thm}[The inversion principle]
+  Let $P(x)$ be a continuous distribution function on $\mathbb{R}$. with inverse $P^{-1}$ defined by
+  \begin{equation}
+    P^{-1}(u) = \inf \left\{ x:P(x)=u, 0 < u < 1 \right\}.
+  \end{equation}
+If $\xi \in [0,1]$ is a uniform random variable, then $P^{-1}(\xi)$ has distribution function $P$.
+\end{thm}
+
+Let $\xi$ be a uniformly distributed random number obtained via some pseudo-random number generator (RNG). Given the above theorem it is possible to draw a sample $X$ from an arbitrary probability density function $p(x)$ by transforming $\xi$ in the following way:
+\begin{enumerate}
+\item Compute the cumulative distribution function $P(x) = \int_{-\infty}^{x} p(x') \,dx'$.
+\item Find the inverse $P^{-1}(x)$.
+\item Compute $X = P^{-1}(\xi)$.
+\end{enumerate}
 
 \subsection{Transforming between distributions}
 
