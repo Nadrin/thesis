@@ -67,6 +67,7 @@ When sampling from multidimensional distributions it is often useful to transfor
 
 Consider a pair of n-dimensional random variables $X$, $Y$ with corresponding probability density functions $p_{x}(x)$ and $p_{y}(y)$. Let $Y = T(X)$ where $T(x)=\langle T_{1}(x), \dots, T_{n}(x) \rangle$ is a bijection. The densities are then related by \parencite{phar2010}:
 \begin{equation}
+\label{eq:pdf_transform}
   p_{y}(y)=p_{y}(T(x)) = \frac{p_{x}(x)}{|J_{T}(x)|},
 \end{equation}
 where $|J_{T}(x)|$ is the absolute value of the determinant of $T$'s Jacobian matrix.
@@ -114,6 +115,89 @@ Converting $\theta$ and $\phi$ into Cartesian coordinates yields final formulae 
 \end{eqnarray}
 
 \subsection{Unit disk}
+Now consider choosing a point on a disk uniformly with respect to area. A point on a disk can be expressed using \emph{polar coordinates}:
+\begin{eqnarray}
+\label{eq:polar}
+  x &=& r \cos\theta \nonumber \\
+  y &=& r \sin\theta
+\end{eqnarray}
+The Jacobian determinant of this transformation is
+\begin{equation}
+  J_{T} = \det \frac{\partial(x,y)}{\partial(r,\theta)} =
+  \left| 
+    \begin{array}{cc}
+      \cos\theta & -r \sin\theta \\
+      \sin\theta & r \cos\theta
+    \end{array}
+  \right| = r.
+\end{equation}
+Plugging $J_{T}$ into equation \ref{eq:pdf_transform} and rearranging the terms yields
+\begin{equation}
+\label{eq:pdf_disk}
+  p(r, \theta) = r\,p(x, y),
+\end{equation}
+where $p$ is probability density function. Uniform distribution implies that $p(x,y)$ needs to be constant.
+
+Differential area on a disk can be expressed in terms of $J_{T}$:
+\begin{equation}
+  dA = dx\,dy = J_{T}\,dr\,d\theta = r\,dr\,d\theta.
+\end{equation}
+Analogous to the hemisphere case the density function integrates to one, this time, over the domain of a unit disk:
+\begin{eqnarray}
+  \int_{0}^{2\pi} \int_{0}^{1} p(x,y) \,r \,dr d\theta &=& 1 \nonumber \\
+  p(x,y) \int_{0}^{2\pi} \int_{0}^{1} r \,dr d\theta &=& 1 \nonumber \\
+  p(x,y) = c &=& \frac{1}{\pi},
+\end{eqnarray}
+therefore from equation \ref{eq:pdf_disk}:
+\begin{equation}
+  p(r, \theta) = \frac{r}{\pi}.
+\end{equation}
+
+Instead of deriving unit disk sampling formulae using the inversion method as before I will use the technique called \emph{concentric disk mapping} \parencite{shirley97}. Concentric map as opposed to traditional polar map is a \emph{low distortion} transformation preserving shapes and fractional areas.
+
+Consider a pair $\xi_{1}$, $\xi_{2}$ of random numbers drawn from standard uniform distribution and function $f$ mapping $\langle \xi_{1}, \xi_{2} \rangle$ onto $[-1,1]^{2}$ square:
+\begin{equation}
+  f(\xi_{1}, \xi_{2}) = \langle 2\xi_{1} - 1, 2\xi_{2} - 1 \rangle = \langle a, b \rangle.
+\end{equation}
+The $[-1,1]^{2}$ square is divided into four regions by the lines $a=b$ and $a=-b$. Every such region produces an angle of $\frac{\pi}{2}$. The correct mapping formulae are chosen based on the region in which the point $\langle a, b \rangle$ lies. For the first region the mapping is:
+\begin{eqnarray}
+  r &=& a \nonumber \\
+  \theta &=& \frac{\pi}{4} \frac{b}{a}.
+\end{eqnarray}
+The other mappings are analogous and are omitted for brevity. Refer to \cite{shirley97} for full implementation of all four cases. Note that the sampled point $\langle r, \theta \rangle$ is in polar coordinates and needs to be converted back into Cartesian coordinates with equation \ref{eq:polar}.
 
 \subsection{Cosine weighted unit hemisphere}
+The rate of convergence of Monte Carlo integration is highly dependent of how close the sampling distribution ``fits'' the integrated function. For best results it is better to sample from distribution that is similar in shape to the integrand.
 
+Recall that the scattering part of the LTE is weighted by the $\cos\theta$ term therefore a probability density function such that $p(\omega) \propto \cos\theta$ is desirable.
+
+A method to achievie a cosine weighted hemispherical distribution is to uniformly sample a unit disk and then generate direction vectors by projecting the sampled points along the $z$ axis onto unit hemisphere above the disk.
+Let $\langle u, v \rangle$ be a uniformly chosen point on a unit disk. The sampling formulae is then \parencite{shirley97}:
+\begin{eqnarray}
+  x &=& u \nonumber \\
+  y &=& v \nonumber \\
+  z &=& \sqrt{1 - (u^{2} + v^{2})}.
+\end{eqnarray}
+
+\section{Multiple importance sampling}
+To improve efficiency of the Monte Carlo estimator even further it is desirable to sample from multiple distributions. This stems from the fact that it is often unknown whether chosen distribution ``fits well'' the integrated function.
+
+One solution to this problem is \emph{multiple importance sampling} which works by evaluating the Monte Carlo estimator several times for multiple distributions and taking weighted average of the results. The usual strategy for evaluating the LTE is to sample both BRDFs and light sources.
+
+Consider evaluating the integral of $f(x)g(x)$ given two sampling distributions $p_{f}$ and $p_{g}$. The new Monte Carlo estimator is then \parencite{phar2010}:
+\begin{equation}
+  F_{MIS} = 
+  \frac{1}{n_{f}} \sum_{i=1}^{n_{f}} \frac{f(X_{i})g(X_{i})w_{f}(X_{i})}{p_{f}(X_{i})} + 
+  \frac{1}{n_{g}} \sum_{j=1}^{n_{g}} \frac{f(Y_{j})g(Y_{j})w_{g}(Y_{j})}{p_{g}(Y_{j})},
+\end{equation}
+where $n_{f}$ is the number of samples taken from the $p_{f}$ distribution, $n_{g}$ is the number of samples taken from the $p_{g}$ distribution and $w_{f}$ and $w_{g}$ are weighting functions.
+
+The weighting functions must be chosen in a way that guarantees that the expected value of $F_{MIS}$ estimator is equal to the integral:
+\begin{equation}
+  E[F_{MIS}] = \int f(x)g(x) \,dx.
+\end{equation}
+A generally recommended weighting function is \emph{power heuristic} \parencite{veach97}:
+\begin{equation}
+  w_{k}(x) = \frac{(n_{k}\,p_{k}(x))^{\beta}}{\sum_{i}(n_{i}\,p_{i}(x))^{\beta}}.
+\end{equation}
+An optimal choice for the exponent is $\beta = 2$, as noted by Veach. With this value power heuristic scales the contribution of a sample proportional to the value of its probability density function.
