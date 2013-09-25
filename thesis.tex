@@ -5,6 +5,8 @@
 \usepackage{amsthm}
 \usepackage{amssymb}
 \usepackage{amsmath}
+\usepackage{listings}
+\usepackage{algorithm2e}
 
 \usepackage[backend=biber,citestyle=authoryear-comp,hyperref=true]{biblatex}
 \usepackage[bookmarks,hidelinks]{hyperref}
@@ -16,9 +18,17 @@
 \newtheorem{df}{Definition}
 \newtheorem{thm}{Theorem}
 
+\lstdefinelanguage{CUDA}[ISO]{C++} {
+  morekeywords={
+    __global__,__host__,__device__,__shared__,
+    float2,float3,float4,int2,int3,int4,uint2,uint3,uint4,
+  }
+}
+
 \addbibresource{common.bib}
 \addbibresource{chapters/theory/theory.bib}
 \addbibresource{chapters/montecarlo/montecarlo.bib}
+\addbibresource{chapters/raytracing/raytracing.bib}
 
 \begin{document}
 \title{LIGHT MODELLING ON THE GPU}

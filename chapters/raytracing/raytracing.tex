@@ -1,10 +1,35 @@
 \chapter{Implementation details}
 
-\section{Design considerations for the GPU}
+\section{Overview}
+\emph{Aurora} is a Monte Carlo distribution raytracer for \emph{Autodesk Maya} 3D content creation suite. It features seamless integration with Maya workflow through the native Maya C++ plugin \emph{application programming interface} (API). Scenes can be rendered at any time without the need to export the data to some file format via the render view window within Maya application.
+
+The host code running on the CPU is written in \emph{ISO C++}, the GPU code is written in \emph{CUDA C} and built against NVIDIA CUDA Toolkit 4.2. Aurora is a native x86\_64 Windows dynamically-linked library; solution is provided for Microsoft Visual Studio 2010. All of the source code is licensed under a permissive open source license.\footnote{Refer to: \url{https://github.com/Nadrin/aurora/blob/master/COPYING.txt}}
+
+The design of the system is heavly influenced by the inclusion of device CUDA code and the many limitations of the NVIDIA CUDA C compiler:
+\begin{itemize}
+\item All GPU kernels are seperated from high level C++ code in a dedicated logical component and placed in the global namespace.
+\item Shared device functions are included inline from \emph{cuh} (CUDA header) source files.
+\item Kernels are called from C++ code indirectly through host wrapper functions. The role of a wrapper is to setup kernel specific parameters and provide convenient abstraction for CUDA unaware MSVC++ compiler.
+\item Classes and types shared between CPU and GPU code don't use inheritance and provide only basic constructors.
+\end{itemize}
+Special considerations were also made for memory management due to the heavy parallel nature of modern GPUs. When executing kernel by hundreds of threads simulatenously all scene data needs to be loaded into the video RAM for instant access by the running kernel. No loading on demand is utilized as it would be only possible in CPU-based implementation. Data structures used by kernels need to be kept minimal and properly aligned in the format that encourages coalescent access patterns by warps.
+
+In overall, the system can be divided into the following list of high-level components:
+\begin{itemize}
+\item \texttt{core}: The core of the system performing general and hardware initialization, memory management and Maya scene graph traversal. It also provides common functions for all available renderer implementations.
+\item \texttt{data}: Classes responsible for interpreting scene data, rebuilding internal representation and loading it into the video memory.
+\item \texttt{kernels}: All CUDA kernels and GPU related code exported to the rest of the system via kernel wrappers.
+\item \texttt{kernels/lib}: A library of common device functions and GPU-only data types used by various kernels.
+\item \texttt{maya}: The interface to Maya C++/MEL\footnote{MEL is the embedded scripting language for Maya.} API: render command implementation, global renderer registration and user interface related functions.
+\item \texttt{render}: Implementations of various renderers. At the time of writing this work two renderer classes are implemented: simple raycaster and monte carlo raytracer. Active renderer class is selected at compile-time. Throughout this work it is assumed that the active renderer is the latter of two.
+\item \texttt{util}: Utility functions and shared CPU/GPU data structures.
+\end{itemize}
+
+The rest of this chapter focuses on describing implementation details of rendering-related functionality of Aurora. \vfill
 
 \section{Raytracing basics}
 
-\section{Intersection tests}
+\section{Intersection testing}
 
 \subsection{Ray--triangle intersection}
 
