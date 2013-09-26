@@ -28,12 +28,57 @@ In overall, the system can be divided into the following list of high-level comp
 The rest of this chapter focuses on describing implementation details of rendering-related functionality of Aurora. \vfill
 
 \section{Raytracing basics}
+The foundation for computational light simulation is the \emph{recursive raytracing} algorithm \parencite{whitted79}. In recursive raytracing virtual rays of light are traced from the virtual camera lens onto the projection plane (the virtual ``film'') and into the scene. At every intersection point with a surface the outgoing illumination is evaluated.
 
-\section{Intersection testing}
+This may seem odd at first since in reality light propagades \emph{from} the light sources to the film in the camera. The correctness of this method follows directly from \emph{Hemholtz reciprocity} \parencite{hapke93} which states that in vaccum or in a passive medium light paths can be reversed without affecting the measurement of flux.
+
+Tracing rays from the camera is often called \emph{backwards raytracing} while tracing from the light sources is called \emph{forward raytracing}. The main drawback of forward raytracing algorithms is that many computed light paths don't hit the camera film at all and thus only small fraction contribute to the final image.
+
+For every reflective or transmittive surface at each intersection point another ray is spawned and the raytracing process continues recursively until either diffuse-only surface is hit or maximum recursion depth is reached. At ray path termination the corresponding framebuffer element is set with the final color value.
+
+\begin{algorithm}
+\caption{Simplified recursive raytracing}
+\KwData{Ray $r$, set of surface elements $S$, set of light sources $L$.}
+\KwResult{Outgoing illumination $I$.}
+$I \leftarrow 0$ \\
+\If{$r$ interesects with any $s \in S$}{
+  $x \leftarrow$ find the nearest intersection point \\
+  \For{every light $l \in L$}{
+    \If{light $l$ is unoccluded from point $x$}{
+      $I_{p} \leftarrow$ compute direct illumination at point $x$ due to $l$ \\
+      \If{surface $s(x)$ is reflective or transmittive}{
+        $r' \leftarrow$ generate new ray at point $x$ \\
+        $I_{s} \leftarrow$ raytrace($r'$, $S$, $L$) \\
+      }
+      $I \leftarrow I + (I_{p} + I_{s})$
+    }
+  }
+}
+\Return{I}
+\end{algorithm}
+
+Aurora implements an extension to recursive raytracing called \emph{distribution raytracing}\footnote{Another widely used name is \emph{stochastic raytracing}.}. Distribution raytracing, or Monte Carlo raytracing, uses sampling of multiple ray paths to evaluate the light transport equation using Monte Carlo estimator introduced in chapter \ref{ch:montecarlo}.
+
+\section{Ray intersection testing}
+A very important part of every raytracer is testing whether a given ray intersects scene primitives. Proper definition of ray is crucial to understanding ray-primitive intersection tests. 
+\begin{df}
+  A ray with origin $\vec{p}$ in 3D space and normalized direction vector $\vec{d}$ is defined by
+  \begin{equation}
+    r(t) := \vec{p} + t\vec{d},
+  \end{equation}
+  where $t \in \mathbb{R} \setminus \{0\}$.
+\end{df}
+
+Aurora implements two types of primitives: \emph{triangles} which are renderable primitives used to represent 3D scene surfaces as triangle meshes and \emph{axis-aligned slabs} which are non-renderable primitives used during the traversal of spatial triangle hierarchy. 
 
 \subsection{Ray--triangle intersection}
+Compact triangle representation is a key factor in increasing geometry streaming throughput from global memory during rendering on the GPU via CUDA. It is therefore natural to utilize ray/triangle intersection test that does not require extra precomputed data besides triangle vertices. Such test was proposed in \cite{mt97} and it is the algorithm implemented in Aurora.
+
+Consider a ray $r(t)$ and a triangle defined by vertices $V_{0}, V_{1}, V_{2}$.
+\vfill
 
 \subsection{Ray--slab intersection}
+todo
 
 \section{The No--Memory Hierarchy}
 
@@ -60,8 +105,6 @@ The rest of this chapter focuses on describing implementation details of renderi
 \subsection{Reflective shader}
 
 \section{Rendering}
-
-\subsection{Multiple importance sampling}
 
 \subsection{Estimating direct lighting integral}
 
