@@ -63,10 +63,10 @@ Aurora implements an extension to recursive raytracing called \emph{distribution
 A very important part of every raytracer is testing whether a given ray intersects scene primitives. Proper definition of ray is crucial to understanding ray-primitive intersection tests. 
 \begin{df}
   A ray with origin $\vec{p}$ in 3D space and normalized direction vector $\vec{d}$ is defined by
-  \begin{equation}
+  \begin{equation} \label{eq:ray}
     r(t) := \vec{p} + t\vec{d},
   \end{equation}
-  where $t \in \mathbb{R} \setminus \{0\}$.
+  where $t \in \mathbb{R}_{+}$.
 \end{df}
 
 Aurora implements two types of primitives: \emph{triangles} which are renderable primitives used to represent 3D scene surfaces as triangle meshes and \emph{axis-aligned slabs} which are non-renderable primitives used during the traversal of spatial triangle hierarchy. 
@@ -74,13 +74,53 @@ Aurora implements two types of primitives: \emph{triangles} which are renderable
 \subsection{Ray--triangle intersection}
 Compact triangle representation is a key factor in increasing geometry streaming throughput from global memory during rendering on the GPU via CUDA. It is therefore natural to utilize ray/triangle intersection test that does not require extra precomputed data besides triangle vertices. Such test was proposed in \cite{mt97} and it is the algorithm implemented in Aurora.
 
-Consider a ray $r(t)$ and a triangle defined by vertices $V_{0}, V_{1}, V_{2}$.
-\vfill
+Consider a ray $r(t)$ and a triangle defined by vertices $V_{0}, V_{1}, V_{2}$. Arbitrary point on this triangle can be expressed in terms of \emph{barycentric coordinates} $\langle u, v \rangle$:
+\begin{equation}
+  T(u,v) = (1-u-v)V_{0} + uV_{1} + vV_{2},
+\end{equation}
+where $u, v \ge 0$ and $u+v \le 1$.
+
+The intersection point of ray $r(t)$ and the triangle $T(u,v)$ need to satisfy the equation
+\begin{eqnarray}
+  r(t) &=& T(u,v) \nonumber \\
+  \vec{p} + t\vec{d} &=& (1-u-v)V_{0} + uV_{1} + vV_{2},
+\end{eqnarray}
+where $t, u$ and $v$ are unknown. Rearranging the terms yields
+\begin{equation}
+\label{eq:int_triangle}
+  \left\lbrack -\vec{d}, V_{1} - V_{0}, V_{2} - V_{0} \right\rbrack
+  \left\lbrack 
+    \begin{array}{c}
+      t\\u\\v
+    \end{array}
+  \right\rbrack
+  = \vec{p} - V_{0}.
+\end{equation}
+Solving this linear system of equations gives the intersection point in terms of point on the ray ($t$ parameter) and point on the triangle ($u,v$ parameters). 
 
 \subsection{Ray--slab intersection}
-todo
+The ray/scene intersection method described in section \ref{sec:nmh} needs to be able to test if a ray intersects with a pair of axis-aligned planes (a ``slab'') in 3D space.
+
+Consider a slab $S$ aligned with axis $OX$. The slab is defined by two parallel planes perpendicular to the $OX$ axis and coplanar with the $YZ$ plane. Their position in space can be determined solely by their distance from the origin $S_{\min}, S_{\max} \in \mathbb{R}$.
+
+To find the intersection between plane $S_{\min}$ and ray $r(t)$ one can use equation \ref{eq:ray} in one-dimensional form:
+\begin{eqnarray}
+  S_{\min} &=& p_{x} + t_{\min} d_{x} \nonumber \\
+  t_{\min} &=& \frac{S_{\min} - p_{x}}{d_{x}}
+\end{eqnarray}
+and similarly for $S_{\max}$:
+\begin{equation}
+  t_{\max} = \frac{S_{\max} - p_{x}}{d_{x}}.
+\end{equation}
+Ray $r(t)$ then intersects slab $S$ if and only if $t_{\min} \le t_{\max}$.
+
+Note that the \texttt{IEEE754} standard for floating point arithmetic guarantees that the result of interesection test will be correct even when $d_{x}=0$. A ray parallel to the $OX$ axis intersects slab $S$ at either $+\infty$ or $-\infty$.
+
+Cases for $OY$ and $OZ$ aligned slabs are identical and omitted here for brevity.
+\vfill
 
 \section{The No--Memory Hierarchy}
+\label{sec:nmh}
 
 \subsection{Construction}
 
