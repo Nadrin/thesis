@@ -5,6 +5,7 @@
 \usepackage{amsthm}
 \usepackage{amssymb}
 \usepackage{amsmath}
+\usepackage{caption}
 \usepackage{listings}
 \usepackage{algorithm2e}
 
@@ -18,6 +19,11 @@
 \newtheorem{df}{Definition}
 \newtheorem{thm}{Theorem}
 
+\lstset{
+  breaklines=true,
+  captionpos=b,
+  basicstyle=\ttfamily\footnotesize
+}
 \lstdefinelanguage{CUDA}[ISO]{C++} {
   morekeywords={
     __global__,__host__,__device__,__shared__,

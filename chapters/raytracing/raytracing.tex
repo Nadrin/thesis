@@ -66,7 +66,7 @@ A very important part of every raytracer is testing whether a given ray intersec
   \begin{equation} \label{eq:ray}
     r(t) := \vec{p} + t\vec{d},
   \end{equation}
-  where $t \in \mathbb{R}_{+}$.
+  where $t > 0$.
 \end{df}
 
 Aurora implements two types of primitives: \emph{triangles} which are renderable primitives used to represent 3D scene surfaces as triangle meshes and \emph{axis-aligned slabs} which are non-renderable primitives used during the traversal of spatial triangle hierarchy. 
@@ -114,18 +114,59 @@ and similarly for $S_{\max}$:
 \end{equation}
 Ray $r(t)$ then intersects slab $S$ if and only if $t_{\min} \le t_{\max}$.
 
-Note that the \texttt{IEEE754} standard for floating point arithmetic guarantees that the result of interesection test will be correct even when $d_{x}=0$. A ray parallel to the $OX$ axis intersects slab $S$ at either $+\infty$ or $-\infty$.
+Note that the \texttt{IEEE754} standard for floating point arithmetic guarantees that the result of this interesection test will be correct even when $d_{x}=0$. A ray coplanar with the $YZ$ plane intersects slab $S$ at either $+\infty$ or $-\infty$.
 
 Cases for $OY$ and $OZ$ aligned slabs are identical and omitted here for brevity.
-\vfill
 
 \section{The No--Memory Hierarchy}
 \label{sec:nmh}
+Testing for ray/scene intersection can be very costly. Assuming scene surfaces consist of triangle meshes the naive approach would be to test every triangle and choose the nearest intersection point. For large number of triangles and rays this is higly impractical as the algorithmic complexity is $O(mn)$ where $m$ is the number of rays and $n$ is the number of triangles. Typical rendering scenario consist of tracing millions of rays through a scene with thousands or even millions of triangles. The computational cost of naive intersection testing is clearly prohibitive.
+
+The basic idea of ``accelerating'' ray intersection tests in large scenes is to use some sort of auxiliary spatial data structure that can lower the complexity by testing only a fraction of scene primitives for each ray. Examples of such structures include bounding volume hierarchies, $kd$-trees and sparse voxel grids. Unfortunately in each case the additional data structure significantly increases memory requirements.
+
+The No-Memory Hierarchy or NMH \parencite{eisemann2012} is a method of spatialy sorting triangles to implicitly represent the acceleration strucutre within the geometry data with no need for addtional memory during traversal. The computational complexity of ray/scene intersection when using NMH is $O(m \log n)$ for $m$ rays and $n$ triangles and the additional memory complexity is $O(\log n)$ because of the recursion stack.
+
+\subsection{Representation and traversal}
+The NMH is a complete, left-balanced binary tree recursively partitioning the geometry of the scene into two disjoint subsets. Each tree node consists of two triangles, continuously mapped in memory, that implicitly define a bounding primitive.
+
+To find an intersection of a ray with the scene geometry the hierarchy is traversed in breath-first order. At each node bounding primitive is recostructed from the bounding triangles. If the query ray intersects with the bounding primitive both bounding triangles are tested for intersection as well and any existing child nodes are enqueued for visiting. If the query ray misses the bounding primitive the current node is skipped.
+
+The bounding primitive for each node is a slab along one of the coordinate axis. The axis is chosen in a round-robin fashion depending on the depth in the tree, starting from $OX$ at the root node (depth zero). Extents of the bounding slab are defined by minimal and maximal triangle vertex along that axis. The bounding slab with active ray interval approximate an axis-aligned bounding box for the current node.
+
+The hierarchy is stored as a continuous array of triangles in memory and can be addressed like a heap. Index zero is the first triangle in the root node. For any node whose first triangle index is $i$ the indices of corresponding first triangles of its children are respectively $2(i+1)$ and $2(i+2)$. A valid index is always smaller than the total number of triangles in the scene. If a particular node has no valid children indices then it is a leaf node.
 
 \subsection{Construction}
+Parallel GPU construction of NMH in Aurora is based on the algorithm described in section 4 of \cite{eisemann2012}.
 
-\subsection{Traversal}
+The NMH construction procedure expects the number of triangles in the scene to be even. If the number of triangles is odd the last triangle is duplicated before construction begins. Let $N$ be the number of triangles after duplication. For performance reasons the algorithm does not operate directly on triangle data; triangle index array $T$ is used instead. A number of other helper buffers are also required: auxiliary index array $I$ of length $N$ which stores the current node index in the hierarchy and two split lists $S_{i}, S_{o}$ of length at most $N/2$ each, carrying information about the starting index and the size of each active partition. Memory complexity of NMH construction is therefore $O(N)$.
 
+At the start $T$ is set to identity permutation $(0, 1, \dots, N-1)$ and $I$ is initialized to zeroes. The input split list $S_{i}$ contains a single active split with starting index $0$ and size $N$ and the bounding axis is set to $OX$.
+
+The algorithm then loops over all $\lfloor \log_{2}(N/2) \rfloor + 1$ levels of the hierarchy and performs the following steps in parallel:
+\begin{enumerate}
+\item Arrays $T$ and $I$ are sorted by each triangle's minimum vertex position along the bounding axis and then stable sort is applied according to the index arrray $I$. After the first sort the triangles are sorted according to their spatial position. The second sort arranges triangles of the same node together without changing their relative position. For the last level of the hierarchy it is the final step.
+\item In each active split the maximum triangle along the current bounding axis is found and swapped to the second position. The first is already the minimum bounding triangle due to sorting.
+\item The index array $I$ is now updated. Let $D$ be the number of already created nodes and $i$ be the index of the split in the split list. The first two triangles of each active split are assigned a value of $D+i$. Other triangles in the split are assigned $2(D+i)+1$.
+\item For each active split in the input split list $S_{i}$ up to two new splits are emitted into the output split list $S_{o}$. Let $n_{S}$ be the number of active splits and $p_{i}$, $n_{i}$ the position and size of i'th split. The sizes $nL_{i}$ and $nR_{i}$ of the new splits are computed from $n_{i}$ as described in listing \ref{lst:calcpartition}. The starting positions of the new splits are then $pL_{i} = p_{i} + 2(n_{S} - i)$ and $pR_{i} = pL_{i} + nL_{i}$. If either $nL_{i} \le 0$ or $nR_{i} \le 0$ the corresponding split is not created.
+\item The bounding axis is incremented and the loop continues.
+\end{enumerate}
+\begin{lstlisting}[
+  label={lst:calcpartition},
+  language=C++,
+  caption=Partition size calculation resulting in left-balanced object-median split of the triangles. The \texttt{log2i} function returns integer base 2 logarithm.]
+void calcPartition(int N, int& L, int& R)
+{
+  int H = log2i(N/2);
+  int s = pow(2, H-1) - 1;
+  int S = pow(2, H) - 1;
+  int O = max(0, (N/2 - 1) - s - S);
+  R = 2 * (s + O);
+  L = 2 * (N/2 - 1) - R;
+}
+\end{lstlisting}
+After the loop is finished the scene geometry data is permuted according to the index array $T$ and all temporary helper buffers are freed. The NMH construction is done.
+
+\vfill
 \section{Scene geometry}
 
 \section{Lights}
