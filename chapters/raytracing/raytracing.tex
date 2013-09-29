@@ -38,7 +38,7 @@ Tracing rays from the camera is often called \emph{backwards raytracing} while t
 For every reflective or transmittive surface at each intersection point another ray is spawned and the raytracing process continues recursively until either diffuse-only surface is hit or maximum recursion depth is reached. At ray path termination the corresponding framebuffer element is set with the final color value.
 
 \begin{algorithm}
-\caption{Recursive raytracing}
+\caption{Recursive raytracing.}
 \label{alg:raytracing}
 \KwData{Ray $r$, set of surface elements $S$, set of light sources $L$.}
 \KwResult{Outgoing illumination $I$.}
@@ -336,6 +336,7 @@ float3 Larea(float3 x, float3 wo, Light L, Shader BRDF)
   return Lo / NUM_SAMPLES;
 }
 \end{lstlisting}
+\vfill
 
 \subsection{Image reconstruction}
 Rendering the scene with only one image sample per pixel, in most cases, yields aliased result. The scene illumination as seen by the camera is a continuous signal that needs to be properly sampled into discrete pixel values for satisfactory visual quality.

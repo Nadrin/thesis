@@ -8,6 +8,8 @@
 \usepackage{caption}
 \usepackage{listings}
 \usepackage{algorithm2e}
+\usepackage{graphicx}
+\usepackage{tikz}
 
 \usepackage[backend=biber,citestyle=authoryear-comp,hyperref=true]{biblatex}
 \usepackage[bookmarks,hidelinks]{hyperref}
@@ -35,8 +37,46 @@
 
 \frontmatter
 \pagenumbering{gobble}
-\maketitle
-\newpage
+
+\begin{titlingpage}
+\calccentering{\unitlength}
+\begin{adjustwidth*}{\unitlength}{-\unitlength}
+\begin{center}
+  \input{misc/amulogo.tex}
+ \begin{LARGE}
+   Adam Mickiewicz University in~Poznań\\
+   \begin{Large}
+     Faculty of Mathematics and~Computer Science\\
+   \end{Large}
+   \vspace{1.5cm}
+   \begin{huge}
+     Michał Siejak\\
+     \small{index no.~329554}\\
+   \end{huge}
+   \vspace{1.5cm}
+   \begin{Huge}
+     LIGHT MODELLING ON THE GPU
+   \end{Huge}
+   \vspace{0.3cm}
+   \begin{footnotesize}
+     (Modelowanie światła na GPU)
+   \end{footnotesize}
+   \vspace{2.0cm}
+    \begin{flushleft}
+      \leftskip=0.5\hsize
+      \large
+      Master's thesis\\
+      in Computer Science\\
+      written under supervision of\\
+      Wojciech Kowalewski PhD\\
+    \end{flushleft}
+    \vfill
+    Poznań, 2013
+ \end{LARGE}
+\end{center}
+\end{adjustwidth*}
+\end{titlingpage}
+
 \pagenumbering{roman}
 \setcounter{page}{2}
 
@@ -48,7 +88,11 @@ Ja, niżej podpisany \textbf{Michał Siejak} student Wydziału
 Matematyki i Informatyki Uniwersytetu im. Adama Mickiewicza w Poznaniu
 oświadczam, że przedkładaną pracę dyplomową pt.:
 
+\vspace{5pt}
 \centerline{\textbf{Light modelling on the GPU}}
+
+\centerline{\textbf{(Modelowanie światła na GPU)}}
+\vspace{5pt}
 
 napisałem samodzielnie. Oznacza to, że przy pisaniu pracy, poza niezbędnymi
 konsultacjami, nie korzystałem z pomocy innych osób, a w szczególności nie
