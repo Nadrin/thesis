@@ -13,7 +13,6 @@
 \usepackage[bookmarks,hidelinks]{hyperref}
 
 \pagestyle{ruled}
-%\setcounter{tocdepth}{3}
 
 \theoremstyle{definition}
 \newtheorem{df}{Definition}
@@ -23,12 +22,6 @@
   breaklines=true,
   captionpos=b,
   basicstyle=\ttfamily\footnotesize
-}
-\lstdefinelanguage{CUDA}[ISO]{C++} {
-  morekeywords={
-    __global__,__host__,__device__,__shared__,
-    float2,float3,float4,int2,int3,int4,uint2,uint3,uint4,
-  }
 }
 
 \addbibresource{common.bib}
@@ -86,7 +79,10 @@ okazało się nieprawdziwe, decyzja o wydaniu mi dyplomu zostanie cofnięta.
 }
 \newpage
 
+\begingroup
+\setlength{\beforechapskip}{0pt}
 \tableofcontents*
+\endgroup
 
 \mainmatter
 \include{chapters/introduction/introduction}

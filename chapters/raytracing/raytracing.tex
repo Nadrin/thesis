@@ -1,4 +1,5 @@
 \chapter{Distribution ray tracing on the GPU}
+\label{ch:raytracing}
 
 \section{Overview}
 \emph{Aurora} is a Monte Carlo distribution raytracer for \emph{Autodesk Maya} 3D content creation suite. It features seamless integration with Maya workflow through the native Maya C++ plugin \emph{application programming interface} (API). Scenes can be rendered at any time without the need to export the data to some file format via the render view window within Maya application.
@@ -280,7 +281,7 @@ Computing $L_{D}$ is straightforward. For each delta light a single shadow sampl
 
 \begin{lstlisting}[
   label={lst:deltaillum},
-  language=CUDA,
+  language=C++,
   caption=Computing outgoing illumination in the direction \texttt{wo} at intersection point \texttt{x} due to a single delta light \texttt{L}.]
 float3 Ldelta(float3 x, float3 wo, Light L, Shader BRDF)
 {
@@ -302,7 +303,7 @@ The $L_{A}$ term is approximated with the Monte Carlo integration estimator usin
 
 \begin{lstlisting}[
   label={lst:areaillum},
-  language=CUDA,
+  language=C++,
   caption=Computing outgoing illumination in the direction \texttt{wo} at intersection point \texttt{x} due to a single area light \texttt{L}.]
 float3 Larea(float3 x, float3 wo, Light L, Shader BRDF)
 {
