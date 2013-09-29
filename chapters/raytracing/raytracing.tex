@@ -1,4 +1,4 @@
-\chapter{Implementation details}
+\chapter{Distribution ray tracing on the GPU}
 
 \section{Overview}
 \emph{Aurora} is a Monte Carlo distribution raytracer for \emph{Autodesk Maya} 3D content creation suite. It features seamless integration with Maya workflow through the native Maya C++ plugin \emph{application programming interface} (API). Scenes can be rendered at any time without the need to export the data to some file format via the render view window within Maya application.
@@ -142,7 +142,9 @@ The NMH construction procedure expects the number of triangles in the scene to b
 
 At the start $T$ is set to identity permutation $(0, 1, \dots, N-1)$ and $I$ is initialized to zeroes. The input split list $S_{i}$ contains a single active split with starting index $0$ and size $N$ and the bounding axis is set to $OX$.
 
-The algorithm then loops over all $\lfloor \log_{2}(N/2) \rfloor + 1$ levels of the hierarchy and performs the following steps in parallel:
+The algorithm then loops over all $\lfloor \log_{2}(N/2) \rfloor + 1$ levels of the hierarchy and performs the NMH construction. The loop is executed on the CPU and at each step several CUDA kernels are launched that parallelize the required operations on the GPU. Parallelism is employed at either triangle or split level depending on the number of active splits and the number of unprocessed triangles.
+
+The construction steps are as follows:
 \begin{enumerate}
 \item Arrays $T$ and $I$ are sorted by each triangle's minimum vertex position along the bounding axis and then stable sort is applied according to the index arrray $I$. After the first sort the triangles are sorted according to their spatial position. The second sort arranges triangles of the same node together without changing their relative position. For the last level of the hierarchy it is the final step.
 \item In each active split the maximum triangle along the current bounding axis is found and swapped to the second position. The first is already the minimum bounding triangle due to sorting.
@@ -166,32 +168,96 @@ void calcPartition(int N, int& L, int& R)
 \end{lstlisting}
 After the loop is finished the scene geometry data is permuted according to the index array $T$ and all temporary helper buffers are freed. The NMH construction is done.
 
-\vfill
-\section{Scene geometry}
+\section{Scene data}
+
+\subsection{Geometry}
+Input geometry suitable for rendering is in the form of a uniform triangle stream assembled from all the meshes in the scene. Each triangle vertex is described by its position and normal vector in world space, 2D texture coordinate and generated tangent and bitangent vectors. Additionaly an index into the shader array is stored per-triangle for the purpose of preserving shader to mesh assignment.
+
+Geometry data is converted from internal Maya representation to a specialized structure-of-arrays (SOA) format optimised for coherent access in CUDA kernels. The Maya-to-Aurora conversion is a two-step process:
+\begin{enumerate}
+\item The CPU thread traverses Maya scene graph and retrieves geometry information from all triangle meshes on the scene assembling the geometry in the SOA format in a special intermediate \emph{staging buffer}. Vertex positions and normals are retrieved in object space. For every triangle mesh the object-to-world transformation matrix and it's inverse-transpose are stored and this transformation is assigned to a range of triangles corresponding to the current mesh. This way the mapping between transformations and triangle intervals in the staging buffer is preserved.
+\item A CUDA kernel is run that transforms vertices and normals from the staging buffer into world space and writes out the result to the GPU memory. Texture coordinates and shader indices are copied as-is.
+\end{enumerate}
+The staging buffer is allocated as host-pinned page-locked memory mapped to the address space of the GPU. This increases performance of the host-to-device upload and transform and allows CUDA kernels to access the staging buffer without introducing additional intermediate stage.
+
+After the geometry is uploaded into the GPU memory the NMH is constructed and tangent and bitangent vectors are precalculated. At this point it is ready for rendering.
+
+\subsection{Textures}
+Textures are stored as 2D CUDA arrays with no stride or padding. Each pixel is in 8 bit per channel RGBA format and is assumed to be in non gamma-corrected linear colorspace. Before rendering, each texture array is assigned to a floating point texture sampler. At the time of writing a maximum number of 32 texture samplers is supported due to a limitation of CUDA 4.2.
+
+During rendering texture pixels are sampled with linear interpolation and in full 32-bit per channel floating point precision. The alpha channel is ignored however since the renderer does not support alpha blending.
 
 \section{Lights}
+Light sources are responsible for illuminating the scene. At least one light of any type is required to be present for obtaining proper rendering.
+
+All light types implement the following common interface:\footnote{Function definitions presented here are simplified for clarity compared to the actual source code.}
+\begin{itemize}
+\item \texttt{bool isDeltaLight()} function returns \texttt{true} for non-physically plausable singularity lights that follow the delta distribution.
+\item \texttt{float3 sampleL(float3 x, float3\& w, float\& pdf)} function samples the light direction vector from point \texttt{x}. The sampled direction is returned in \texttt{w} and probability for sampling that particular direction is returned in \texttt{pdf}. The function returns incident radiance at \texttt{x}.
+\item \texttt{float pdf(float3 x, float3 w)} function returns the probability of sampling the light from point \texttt{x} in the direction \texttt{w}.
+\item \texttt{bool visible(float3 x, float3 w)} function returns \texttt{true} if the light is visible from point \texttt{x} in the direction \texttt{w}.
+\end{itemize}
+Common attributes for all lights include \emph{illumination color} and \emph{intensity}.\footnote{This is not intensity in a strict physical sense rather a simple brightness factor. This slight abuse of terminology is prevalent in computer graphics.}
 
 \subsection{Point light}
+An isotropic point light emits light from a single point in space equally in all directions. A perfect point light is physicaly implausable nevertheless it is fair approximation of a very small light source. The brightness of a point light falls off with an inverse square of the distance between the illuminated point and the light position.
 
 \subsection{Directional light}
+Directional light, also called \emph{distant light}, illuminates the scene from infinity in a single direction with constant brightness. A good example of a real-life directional light is the Sun which is so far away from Earth that all the light rays emmited from it are parallel to each other.
 
 \subsection{Area light}
+Area light is an arbitrary light emitting surface. In Aurora, due to compatibility with Maya's built-in light types, area lights are rectangles oriented in space illuminating the scene in the direction of the rectangle's normal vector. It is the only supported non-delta light. 
+
+Area lights causes objects in the scene to cast soft-shadows although that requires considerable amount of samples to look noise-free and thus significantly slows down rendering.
+
+Area light interface defines additional function \texttt{float3 L(float3 w)} which returns incident radiance due to illumination from particular direction vector \texttt{w}.
 
 \section{Shaders}
+Shaders define the physical properties of a surface: how the light interacts with it and thus determine how it looks under illumination.
 
-\subsection{Shading coordinate system}
+All shaders implement the following common interface:\footnote{As with lights the interface presented here is simplified compared to the actual source code.}
+\begin{itemize}
+\item \texttt{float3 f(float3 wo, float3 wi)} function computes the value of the BRDF given outgoing and incident light direction vectors \texttt{wo} and \texttt{wi}. The returned value is premultiplied by the surface color.
+\item \texttt{float pdf(float3 wo, float3 wi)} function returns the probability of sampling given pair of directions.
+\item \texttt{float3 samplef(float3 wo, float3\& wi, float\& pdf)} function samples the incident light direction given outgoing direction vector \texttt{wo}. The sampled direction vector is returned in \texttt{wi} and probability of sampling that particular direction is returned in \texttt{pdf}. The function returns value of the BRDF for \texttt{wo} and \texttt{wi} premultiplied by the surface color.
+\end{itemize}
+Each of the above functions implicitly perform coordinate system conversion when needed.
 
-\subsection{Lambert shader}
+\subsection{The shading coordinate system}
+Shading calculations in Aurora are performed in the \emph{shading coordinate system} which is a local frame of reference for a point $x(u,v)$ on the surface of a triangle, where $u$ an $v$ are barycentric coordinates.
 
-\subsection{Reflective shader}
+Let $N(x), T(x)$ and $B(x)$ be respectively: normal, tangent and bitangent vectors at point $x$ obtained from per-vertex data by barycentric interpolation and re-normalisation. The $T, B, N$ vectors form the orthonormal basis of shading coordinate system for point $x$ and the world space to shading space transformation matrix is
+\begin{equation}
+  M_{s} = \left[
+    \begin{array}{ccc}
+      T_{x} & T_{y} & T_{z} \\
+      B_{x} & B_{y} & B_{z} \\
+      N_{x} & N_{y} & N_{z}
+    \end{array}
+  \right].
+\end{equation}
+In the shading coordinate system the normal vector points ``upwards'' along the $OZ$ axis and the tangent and bitangent vectors are aligned with $OX$ and $OY$ axes respectively. This simplifies many computations and is consistent with the coordinate system used by sampling routines derived in chapter \ref{ch:montecarlo}.
+
+Becasue $M_{s}$ is orthonormal the inverse shading space to world space transformation is
+\begin{equation}
+  M_{w} = (M_{s})^{-1} = (M_{s})^{T}.
+\end{equation}
+
+\subsection{Diffuse shader}
+The diffuse shader is based on the Lambertian BRDF and simulates a perfectly diffuse surface. The only attribute is the \emph{surface color}.
+
+\subsection{Mirror reflection shader}
+The mirror reflection shader combines Lambertian BRDF with perfect specular reflection BRDF to achieve semi-reflective dielectric surface. The attributes of this shader are: \emph{surface color}, \emph{reflectivity} and \emph{refractive index}. The reflectivity attribute takes values in the range $[0,1]$ and controls the amount of incoming light that reflects specularly off the surface.
+
+For computing the Fresnel's term in specular reflection for dielectric surfaces Schlick's approximation \parencite{schlick94} is used as it involves simpler calculations than the accurate solution while preserving high visual quality.
 
 \section{Rendering}
 
-\subsection{Estimating direct lighting integral}
+\subsection{The virtual camera}
 
-\subsection{Handling specular reflections}
+\subsection{Computing illumination}
 
-\subsection{Antialiasing and filtering}
+\subsection{Antialiasing}
 
 
 
