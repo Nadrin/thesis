@@ -29,7 +29,7 @@ In this work I will, by convention, denote a unit direction vector anchored at s
 Consider a differential surface element $dS$ on a unit sphere spanning from $\theta$ to $\theta + d\theta$ and from $\phi$ to $\phi + d\phi$. Differential area of a set of directions $d\omega$ (or, equivalently, solid angle subtended by $dS$) is then
 \begin{equation}
 \label{eq:dw2spherical}
-  d\omega = \frac{\sin\theta d\theta d\phi}{r^{2}} = \sin\theta d\theta d\phi.
+  d\omega = \frac{\sin\theta \,d\theta \,d\phi}{r^{2}} = \sin\theta \,d\theta \,d\phi.
 \end{equation}
 This relationship is the key to converting integrals over solid angles to integrals over directions.
 
@@ -44,11 +44,11 @@ where $\theta$ is the angle between $\omega$ and surface normal at $P$.
 \begin{df}[Dirac's delta]
   Dirac's delta function \parencite{dirac58} is a generalized function defined over real numbers that is zero everywhere except at the origin. It can be thought of as an infinitely high, infinitely thin spike at $x=0$ with unit area under the curve.
 \begin{equation}
-  \int_{-\infty}^{\infty} \delta(x) dx = 1.
+  \int_{-\infty}^{\infty} \delta(x) \,dx = 1.
 \end{equation}
 One particularly useful property of the delta function is
 \begin{equation}
-  \int_{-\infty}^{\infty} \delta(x - x_{0}) f(x) dx = f(x_{0}).
+  \int_{-\infty}^{\infty} \delta(x - x_{0}) f(x) \,dx = f(x_{0}).
 \end{equation}
 \end{df}
 
@@ -105,11 +105,11 @@ Radiant exitance is analogous to irradiance but measures outgoing radiant flux a
 \begin{df}
 Radiance $[W \cdot m^{-2} \cdot sr^{-1}]$ is radiant flux density per unit area per unit solid angle. It is measured on a differential surface perpendicular to $\omega$ and around point $x$.
 \begin{equation}
-  L(x,\omega) := \frac{d^{2}\Phi(x, \omega)}{dA(x) |\cos\theta| d\omega},
+  L(x,\omega) := \frac{d^{2}\Phi(x, \omega)}{dA(x) |\cos\theta| \,d\omega},
 \end{equation}
 where $\theta$ is the angle between $\omega$ and surface normal $\vec{N}(x)$. Radiance can also be formulated by using the dot product of $\omega$ and surface normal:
 \begin{equation}
-  L(x, \omega) := \frac{d^{2}\Phi(x, \omega)}{|\omega \cdot \vec{N}(x)| dA(x) d\omega}.
+  L(x, \omega) := \frac{d^{2}\Phi(x, \omega)}{|\omega \cdot \vec{N}(x)| \,dA(x) \,d\omega}.
 \end{equation}
 \end{df}
 
@@ -133,7 +133,7 @@ Recall from section \ref{sec:assumptions} that the modelling of light in this wo
 \begin{df}[BRDF]
 Bidirectional reflectance distribution function $[sr^{-1}]$ is the constant of proportionality of outgoing radiance due to irradiance at point $x$ on some surface.
 \begin{equation}
-  f_{r}(\omega_{o}, \omega_{i}) := \frac{dL_{o}(x, \omega_{o})}{dE(x, \omega_{i})} = \frac{dL_{o}(x, \omega_{o})}{L_{i}(x, \omega_{i}) |\cos\theta_{i}| d\omega_{i}}.
+  f_{r}(\omega_{o}, \omega_{i}) := \frac{dL_{o}(x, \omega_{o})}{dE(x, \omega_{i})} = \frac{dL_{o}(x, \omega_{o})}{L_{i}(x, \omega_{i}) |\cos\theta_{i}| \,d\omega_{i}}.
 \end{equation}
 \end{df}
 
@@ -149,7 +149,7 @@ Physically based BRDFs have the following properties:
 Directional--hemispherical reflectance \parencite{sillion94} is the fraction of incident radiant flux density in a given direction that is reflected over the entire hemisphere of possible directions.
 \begin{equation}
 \label{eq:dhrefl}
-  \rho_{dh}(\omega_{i}) = \int_{\Omega} f_{r}(\omega_{o}, \omega_{i}) |\cos\theta_{o}| d\omega_{o}
+  \rho_{dh}(\omega_{i}) = \int_{\Omega} f_{r}(\omega_{o}, \omega_{i}) |\cos\theta_{o}| \,d\omega_{o}
 \end{equation}
 \end{df}
 
@@ -206,8 +206,8 @@ Let $f_{d}$ be the BRDF of perfectly diffuse surface. Due to BRDF reciprocity $f
 \end{equation}
 Substitution into equation (\ref{eq:dhrefl}) yields \emph{diffuse reflectance} coefficient:
 \begin{eqnarray}
-  \rho_{d} &=& c \int_{\Omega} |\cos\theta_{o}| d\omega_{o} \\
-  &=& c \int_{0}^{\pi} \int_{0}^{2\pi} |\cos\theta_{o}| \sin\theta_{o} d\theta_{o} d\phi_{o} \\
+  \rho_{d} &=& c \int_{\Omega} |\cos\theta_{o}| \,d\omega_{o} \\
+  &=& c \int_{0}^{\pi} \int_{0}^{2\pi} |\cos\theta_{o}| \sin\theta_{o} \,d\theta_{o} \,d\phi_{o} \\
   &=& c \pi.
 \end{eqnarray}
 In terms of diffuse reflectance the Lambertian BRDF is then
@@ -240,13 +240,13 @@ Since $f_{s}$ is not a well-defined function it requires special handling in the
 \section{The light transport equation (LTE)}
 The light transport equation, sometimes also called the rendering equation, has been originally formulated by \emph{James T. Kajiya} in \cite{kajiya86}. It describes the equilibrium distribution of radiance in a scene. For every point it gives total reflected radiance in terms of emission from the surface, its BRDF and the distribution of incident illumination. Good formulation of the LTE is given, for example, in \cite{phar2010}:
 \begin{equation}
-  L_{o}(x, \omega_{o}) = L_{e}(x, \omega_{o}) + \int_{\Omega} f_{r}(x, \omega_{o}, \omega_{i}) L_{i}(x, \omega_{i}) |\cos\theta_{i}| d\omega_{i},
+  L_{o}(x, \omega_{o}) = L_{e}(x, \omega_{o}) + \int_{\Omega} f_{r}(x, \omega_{o}, \omega_{i}) L_{i}(x, \omega_{i}) |\cos\theta_{i}| \,d\omega_{i},
 \end{equation}
 where
 \begin{itemize}
 \item $L_{o}(x, \omega_{o})$ is the total outgoing radiance in direction $\omega_{o}$ from point $x$.
-\item $L_{e}(X, \omega_{e})$ is the outgoing radiance from point $x$ due to surface emission.
-\item $L_{i}(X, \omega_{i})$ is the total incident radiance on point $x$ from the hemisphere of direction $\Omega$ around that point.
+\item $L_{e}(x, \omega_{e})$ is the outgoing radiance from point $x$ due to surface emission.
+\item $L_{i}(x, \omega_{i})$ is the incident radiance on point $x$ from differential direction $d\omega_{i}$.
 \item $f_{r}(x, \omega_{o}, \omega_{i})$ is the value of the BRDF of surface at point $x$ given incident and outgoing direction vectors.
 \item $\theta_{i}$ is the angle between incident radiance direction $\omega_{i}$ and surface normal at point $x$.
 \end{itemize}

@@ -5,7 +5,7 @@ Monte Carlo integration is a method of approximating the value of an integral wh
 \section{The Monte Carlo estimator}
 Let $f: I \rightarrow \mathbb{R}$ be a real-valued function defined over the interval $I$ and $a,b \in I$. Monte Carlo integration is a mean to estimate the integral of the form:
 \begin{equation}
-  F = \int_{a}^{b} f(x)dx.
+  F = \int_{a}^{b} f(x)\,dx.
 \end{equation}
 
 The basis for deriving the Monte Carlo estimator is the \emph{mean value theorem} for integration:
@@ -13,12 +13,12 @@ The basis for deriving the Monte Carlo estimator is the \emph{mean value theorem
 If $f(x)$ is continuous over $[a, b]$, then there exists a number $c \in (a, b)$ such that:
 \begin{equation}
 \label{eq:meanvalue}
-  \frac{1}{b-a} \int_{a}^{b} f(x)dx = f(c).
+  \frac{1}{b-a} \int_{a}^{b} f(x)\,dx = f(c).
 \end{equation}
 \end{thm}
 Rearranging the terms of equation \ref{eq:meanvalue} yields:
 \begin{equation}
-  \int_{a}^{b} f(x)dx = (b-a) \cdot f(c) = F,
+  \int_{a}^{b} f(x)\,dx = (b-a) \cdot f(c) = F,
 \end{equation}
 which has simple interpretation that the area under the curve is the width of its base $(b-a)$ times the average ``height'' $f(c)$. To estimate the value of $f(c)$ one could evaluate the function $f(x)$ at random points in the interval $[a,b]$ and compute the average of the sum of samples.
 
@@ -33,8 +33,8 @@ With that definition the expected value of the estimator $F_{N}$ is the value of
 \begin{eqnarray}
   E[F_{N}] &=& E\left[ \frac{1}{N} \sum_{i=1}^{N} \frac{f(X_{i})}{p(X_{i})} \right]
   = \frac{1}{N} \sum_{i=1}^{N} E \left[ \frac{f(X_{i})}{p(X_{i})} \right] = \nonumber \\
-  &=& \frac{1}{N} \sum_{i=1}^{N} \int_{a}^{b} \frac{f(x)}{p(x)} p(x) dx
-  = \frac{1}{N} \sum_{i=1}^{N} \int_{a}^{b} f(x) dx = \nonumber \\
+  &=& \frac{1}{N} \sum_{i=1}^{N} \int_{a}^{b} \frac{f(x)}{p(x)} p(x) \,dx
+  = \frac{1}{N} \sum_{i=1}^{N} \int_{a}^{b} f(x) \,dx = \nonumber \\
   &=& \int_{a}^{b} f(x)dx = F.
 \end{eqnarray}
 For functions with higher number of dimensions random samples $X_{i}$ are drawn from \emph{joint probability density function}.
@@ -145,8 +145,8 @@ Differential area on a disk can be expressed in terms of $J_{T}$:
 \end{equation}
 Analogous to the hemisphere case the density function integrates to one, this time, over the domain of a unit disk:
 \begin{eqnarray}
-  \int_{0}^{2\pi} \int_{0}^{1} p(x,y) \,r \,dr d\theta &=& 1 \nonumber \\
-  p(x,y) \int_{0}^{2\pi} \int_{0}^{1} r \,dr d\theta &=& 1 \nonumber \\
+  \int_{0}^{2\pi} \int_{0}^{1} p(x,y) \,r \,dr \,d\theta &=& 1 \nonumber \\
+  p(x,y) \int_{0}^{2\pi} \int_{0}^{1} r \,dr \,d\theta &=& 1 \nonumber \\
   p(x,y) = c &=& \frac{1}{\pi},
 \end{eqnarray}
 therefore from equation \ref{eq:pdf_disk}:

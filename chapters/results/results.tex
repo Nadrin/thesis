@@ -1,13 +1,13 @@
 \chapter{Conclusions and results}
 \label{ch:results}
 
-Aurora succesfuly estimates direct illumination in arbitrary scenes via stochastic Monte Carlo raytracing. Achieved performance is promising althorugh not yet adequate for interactive rendering. Autodesk Maya integration makes it a robust and easy to use tool for offline 3D scene visualisation.
+Aurora successfully estimates direct illumination in arbitrary scenes via stochastic Monte Carlo raytracing. Achieved performance is promising although not yet adequate for interactive rendering. Autodesk Maya integration makes it a robust and easy to use tool for offline 3D scene visualization.
 
 \section{Further work}
 There is a significant amount of possible future improvements in Aurora.
 \begin{itemize}
-\item Right now only direct illumination is estimated. Addition of a global illumination algorithm would greatly increase realism by also estimating indirect illumination due to phenomena like diffuse interreflection.
-\item Adding support for more complex BRDFs, for example micorfacet models or anisotropic distributions, would be also beneficial to rendering realism.
+\item Right now only direct illumination is estimated. Addition of a global illumination algorithm would greatly increase realism by also estimating indirect illumination due to phenomena like diffuse inter--reflection.
+\item Adding support for more complex BRDFs, for example microfacet models or anisotropic distributions, would be also beneficial to rendering realism.
 \item Extending sampling strategies to pseudo Monte Carlo sampling, for example by employing Halton sequences or stratified sampling, would reduce variance and produce images with less noise.
 \item Adding multiple GPU support would greatly increase performance on systems with more than one CUDA capable graphics card.
 \end{itemize}
