@@ -10,7 +10,7 @@ In spherical coordinate system position of a point $P$ in 3D space is described 
 \item $0 \leq \theta \leq \pi$ (\emph{polar angle}) is the angle between $OP$ line segment and a fixed axis ($OZ$).
 \item $0 \leq \phi \leq 2\pi$ (\emph{azimuth angle}) is the angle between other axis ($OX$) and orthogonal projection of $OP$ on the reference plane ($XY$).
 \end{itemize}
-A point in spherical coordinates $(r, \theta, \phi)$ can be converted into cartesian coordinates $(x, y, z)$ as follows:
+A point in spherical coordinates $(r, \theta, \phi)$ can be converted into Cartesian coordinates $(x, y, z)$ as follows:
 \begin{eqnarray}
   x &=& r \sin \theta \cos \phi \nonumber \\
   y &=& r \sin \theta \sin \phi \\
@@ -26,7 +26,7 @@ In this work I will, by convention, denote a unit direction vector anchored at s
 \begin{equation}
   \omega(\theta,\phi) := \langle \sin\theta\cos\phi, \sin\theta\sin\phi, \cos\theta \rangle.
 \end{equation}
-Consider a differntial surface element $dS$ on a unit sphere spanning from $\theta$ to $\theta + d\theta$ and from $\phi$ to $\phi + d\phi$. Differential area of a set of directions $d\omega$ (or, equivalently, solid angle subtended by $dS$) is then
+Consider a differential surface element $dS$ on a unit sphere spanning from $\theta$ to $\theta + d\theta$ and from $\phi$ to $\phi + d\phi$. Differential area of a set of directions $d\omega$ (or, equivalently, solid angle subtended by $dS$) is then
 \begin{equation}
 \label{eq:dw2spherical}
   d\omega = \frac{\sin\theta d\theta d\phi}{r^{2}} = \sin\theta d\theta d\phi.
@@ -54,12 +54,12 @@ One particularly useful property of the delta function is
 
 \section{Simulation assumptions}
 \label{sec:assumptions}
-Simulating light propagation in 3D scenes is very computationaly intensive task. It is generally reasonable to make certain assumptions about the nature of light or the scene itself that can drastically reduce algorithm complexity and speed up simulation without sacrificing noticable image quality. Some physical phenomena are insignificant at macroscopic scale or their effects are too miniscule relative to added simulation complexity.
+Simulating light propagation in 3D scenes is very computationally intensive task. It is generally reasonable to make certain assumptions about the nature of light or the scene itself that can drastically reduce algorithm complexity and speed up simulation without sacrificing noticeable image quality. Some physical phenomena are insignificant at macroscopic scale or their effects are too minuscule relative to added simulation complexity.
 
 The following properties are implicitly assumed for the rest of this work:
 \begin{itemize}
-\item Light transport is considered in the context of \emph{geometric optics} on macroscopic scale (quantumn effects are ignored).
-\item Light travels in vaccum with no participating media and is unpolarized.
+\item Light transport is considered in the context of \emph{geometric optics} on macroscopic scale (quantum effects are ignored).
+\item Light travels in vacuum with no participating media and is unpolarized.
 \item Light consists of radiation of mixed wavelengths and spectral effects, such as dispersion, are ignored.
 \item The scene is in the state of energy equilibrium. 
 \end{itemize}
@@ -67,7 +67,7 @@ The following properties are implicitly assumed for the rest of this work:
 \section{Radiometric quantities}
 The natural basis for study of light transport in computer graphics is the field of \emph{radiometry} and, by lesser extent, \emph{photometry}.
 
-Radiometry is the study of electromagnetic radiation (which, of course, incldues visible light spectrum) and its interaction with matter. Photometry, on the other hand, studies human perception of light. Defining key radiometric quantities is necessary for proper understanding of light transport theory.
+Radiometry is the study of electromagnetic radiation (which, of course, includes visible light spectrum) and its interaction with matter. Photometry, on the other hand, studies human perception of light. Defining key radiometric quantities is necessary for proper understanding of light transport theory.
 
 Unless noted otherwise definitions in this section are based on chapter one of \cite{mccluney94}.
 
@@ -91,7 +91,7 @@ Irradiance $[W \cdot m^{-2}]$ is  area density of radiant flux arriving at a sur
 \begin{equation}
   E(x) := \frac{d\Phi(x)}{dA(x)}
 \end{equation}
-Although formal definition of irradiance includes both sides of the surface in the measurement, for the purpose of computer graphics it is more convenient to consider only the side with normal vector $N(x)$ pointing outwards thus irradiance measures incident radiant flux in the upper hemisphere around point $x$.
+Although formal definition of irradiance includes both sides of the surface in the measurement, for the purpose of computer graphics it is more convenient to consider only the side with normal vector $N(x)$ pointing outwards, thus irradiance measures incident radiant flux in the upper hemisphere around point $x$.
 \end{df}
 
 \begin{df}
@@ -113,7 +113,7 @@ where $\theta$ is the angle between $\omega$ and surface normal $\vec{N}(x)$. Ra
 \end{equation}
 \end{df}
 
-It is often useful to distinguish between radiance arraving at a surface and radiance leaving a surface. Throughout this work \emph{incident radiance} will be denoted by $L_{i}(x, \omega)$ while \emph{exitant radiance} will be denoted by $L_{o}(x, \omega)$. Following from assumptions in section \ref{sec:assumptions} it is easly seen that:
+It is often useful to distinguish between radiance arriving at a surface and radiance leaving a surface. Throughout this work \emph{incident radiance} will be denoted by $L_{i}(x, \omega)$ while \emph{exitant radiance} will be denoted by $L_{o}(x, \omega)$. Following from assumptions in section \ref{sec:assumptions} it is easily seen that:
 \begin{equation}
   L_{i}(x, \omega) = L_{o}(x, -\omega).
 \end{equation}
@@ -142,7 +142,7 @@ In other words BRDF is radiance leaving in direction $\omega_{o}$ per unit of ir
 Physically based BRDFs have the following properties:
 \begin{itemize}
 \item \emph{Reciprocity}: For all pairs of directions $\omega_{i}$, $\omega_{o}$: $f_{r}(\omega_{o}, \omega_{i}) = f_{r}(\omega_{i}, \omega_{o})$.
-\item \emph{Energy conservation}: The total energy of reflected light is less than or equal to the enrgy of incident light.
+\item \emph{Energy conservation}: The total energy of reflected light is less than or equal to the energy of incident light.
 \end{itemize}
 
 \begin{df}
@@ -164,7 +164,7 @@ Snell's law describes the relationship between the angle of incident light and t
 where $\eta_{i}$, $\eta_{t}$ are indices of refraction of incident and transmitted media and $\theta_{i}$, $\theta_{t}$ are the corresponding angles between surface normal vector and incident and transmitted direction vectors.
 \end{df}
 
-Recall from section \ref{sec:assumptions} that light is assumed to be unpolarized. To get \emph{Fresnel reflectance} for unpolarized light it is sufficient to take the average of fresnel reflectance for each polarization direction.
+Recall from section \ref{sec:assumptions} that light is assumed to be unpolarized. To get \emph{Fresnel reflectance} for unpolarized light it is sufficient to take the average of Fresnel reflectance for each polarization direction.
 
 \begin{df}
 Let $r_{\parallel}$ be the Fresnel reflectance for parallel polarized light and $r_{\perp}$ be the Fresnel reflectance for perpendicular polarized light. Reflectance for unpolarized light is then:
@@ -198,7 +198,7 @@ where $\eta$ is the index of refraction of the conductor, $k$ is the \emph{absor
 \section{Reflection models}
 
 \subsection{Lambertian reflection}
-The simplest, yet widely used, reflection model is \emph{Lambertian diffuse reflection}. Lambertian surfaces scatter incident light uniformly in all directions. While such ideal diffuse reflection is physically unplausable, in practice, it is fairly good approximation of many real life materials like matte plastic or clay.
+The simplest, yet widely used, reflection model is \emph{Lambertian diffuse reflection}. Lambertian surfaces scatter incident light uniformly in all directions. While such ideal diffuse reflection is physically implausible, in practice it is fairly good approximation of many real life materials like matte plastic or clay.
 
 Let $f_{d}$ be the BRDF of perfectly diffuse surface. Due to BRDF reciprocity $f_{d}(\omega_{o}, \omega_{i}) = f_{d}(\omega_{i}, \omega_{o})$, therefore $f_{d}$ is independent of both $\omega_{i}$ and $\omega_{o}$ and thus constant:
 \begin{equation}
@@ -238,7 +238,7 @@ Let $f_{s}$ be the BRDF of perfectly specular surface. $f_{s}$ should have non-z
 Since $f_{s}$ is not a well-defined function it requires special handling in the implementation.
 
 \section{The light transport equation (LTE)}
-The light transport equation, sometimes also called the rendering equation, has been originaly formulated by \emph{James T. Kajiya} in \cite{kajiya86}. It describtes the equilibrium distribution of radiance in a scene. For every point it gives total reflected radiance in terms of emission from the surface, its BRDF and the distribution of incident illumination. Good formulation of the LTE is given, for example, in \cite{phar2010}:
+The light transport equation, sometimes also called the rendering equation, has been originally formulated by \emph{James T. Kajiya} in \cite{kajiya86}. It describes the equilibrium distribution of radiance in a scene. For every point it gives total reflected radiance in terms of emission from the surface, its BRDF and the distribution of incident illumination. Good formulation of the LTE is given, for example, in \cite{phar2010}:
 \begin{equation}
   L_{o}(x, \omega_{o}) = L_{e}(x, \omega_{o}) + \int_{\Omega} f_{r}(x, \omega_{o}, \omega_{i}) L_{i}(x, \omega_{i}) |\cos\theta_{i}| d\omega_{i},
 \end{equation}
@@ -246,11 +246,11 @@ where
 \begin{itemize}
 \item $L_{o}(x, \omega_{o})$ is the total outgoing radiance in direction $\omega_{o}$ from point $x$.
 \item $L_{e}(X, \omega_{e})$ is the outgoing radiance from point $x$ due to surface emission.
-\item $L_{i}(X, \omega_{i})$ is the total incident radiance on point $x$ from the hemisphere of directions $\Omega$ around that point.
+\item $L_{i}(X, \omega_{i})$ is the total incident radiance on point $x$ from the hemisphere of direction $\Omega$ around that point.
 \item $f_{r}(x, \omega_{o}, \omega_{i})$ is the value of the BRDF of surface at point $x$ given incident and outgoing direction vectors.
 \item $\theta_{i}$ is the angle between incident radiance direction $\omega_{i}$ and surface normal at point $x$.
 \end{itemize}
 
-Solving the LTE is an area of active research in computer graphics. It cannot be computed analyticaly for any non-trivial scene and high dimensionality of the integral causes most of the numerical integration methods to converge very slowly to the approximate solution.
+Solving the LTE is an area of active research in computer graphics. It cannot be computed analytically for any non-trivial scene and high dimensionality of the integral causes most of the numerical integration methods to converge very slowly to the approximate solution.
 
-One viable technique of solving the LTE is \emph{Monte Carlo integration} which will be explored in the next chapter.
+One viable technique of solving the LTE is \emph{Monte Carlo integration}, which will be explored in the next chapter.

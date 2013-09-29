@@ -2,18 +2,18 @@
 \label{ch:raytracing}
 
 \section{Overview}
-\emph{Aurora} is a Monte Carlo distribution raytracer for \emph{Autodesk Maya} 3D content creation suite. It features seamless integration with Maya workflow through the native Maya C++ plugin \emph{application programming interface} (API). Scenes can be rendered at any time without the need to export the data to some file format via the render view window within Maya application.
+\emph{Aurora} is a Monte Carlo distribution raytracer for \emph{Autodesk Maya} 3D content creation suite. It features seamless integration with Maya workflow through the native Maya C++ plugin \emph{application programming interface} (API). Scenes can be rendered at any time via the render view window within Maya application without the need to export the data to some file format.
 
 The host code running on the CPU is written in \emph{ISO C++}, the GPU code is written in \emph{CUDA C} and built against NVIDIA CUDA Toolkit 4.2. Aurora is a native x86\_64 Windows dynamically-linked library; solution is provided for Microsoft Visual Studio 2010. All of the source code is licensed under a permissive open source license.\footnote{Refer to: \url{https://github.com/Nadrin/aurora/blob/master/COPYING.txt}}
 
-The design of the system is heavly influenced by the inclusion of device CUDA code and the many limitations of the NVIDIA CUDA C compiler:
+The design of the system is heavily influenced by the inclusion of device CUDA code and the many limitations of the NVIDIA CUDA C compiler:
 \begin{itemize}
-\item All GPU kernels are seperated from high level C++ code in a dedicated logical component and placed in the global namespace.
+\item All GPU kernels are separated from high level C++ code in a dedicated logical component and placed in the global namespace.
 \item Shared device functions are included inline from \emph{cuh} (CUDA header) source files.
 \item Kernels are called from C++ code indirectly through host wrapper functions. The role of a wrapper is to setup kernel specific parameters and provide convenient abstraction for CUDA unaware MSVC++ compiler.
 \item Classes and types shared between CPU and GPU code don't use inheritance and provide only basic constructors.
 \end{itemize}
-Special considerations were also made for memory management due to the heavy parallel nature of modern GPUs. When executing kernel by hundreds of threads simulatenously all scene data needs to be loaded into the video RAM for instant access by the running kernel. No loading on demand is utilized as it would be only possible in CPU-based implementation. Data structures used by kernels need to be kept minimal and properly aligned in the format that encourages coalescent access patterns by warps.
+Special considerations were also made for memory management due to the heavy parallel nature of modern GPUs. When executing kernel by hundreds of threads simultaneously all scene data needs to be loaded into the video RAM for instant access by the running kernel. No loading on demand is utilized as it would be only possible in CPU-based implementation. Data structures used by kernels need to be kept minimal and properly aligned in the format that encourages coalescent access patterns by warps.
 
 In overall, the system can be divided into the following list of high-level components:
 \begin{itemize}
@@ -22,16 +22,16 @@ In overall, the system can be divided into the following list of high-level comp
 \item \texttt{kernels}: All CUDA kernels and GPU related code exported to the rest of the system via kernel wrappers.
 \item \texttt{kernels/lib}: A library of common device functions and GPU-only data types used by various kernels.
 \item \texttt{maya}: The interface to Maya C++/MEL\footnote{MEL is the embedded scripting language for Maya.} API: render command implementation, global renderer registration and user interface related functions.
-\item \texttt{render}: Implementations of various renderers. At the time of writing this work two renderer classes are implemented: simple raycaster and monte carlo raytracer. Active renderer class is selected at compile-time. Throughout this work it is assumed that the active renderer is the latter of two.
+\item \texttt{render}: Implementations of various renderers. At the time of writing this work two renderer classes are implemented: simple raycaster and Monte Carlo raytracer. Active renderer class is selected at compile-time. Throughout this work it is assumed that the active renderer is the latter of two.
 \item \texttt{util}: Utility functions and shared CPU/GPU data structures.
 \end{itemize}
 
-The rest of this chapter focuses on describing implementation details of rendering-related functionality of Aurora. \vfill
+The rest of this chapter focuses on describing implementation details of rendering--related functionality of Aurora. \vfill
 
 \section{Raytracing basics}
 The foundation for computational light simulation is the \emph{recursive raytracing} algorithm \parencite{whitted79}. In recursive raytracing virtual rays of light are traced from the virtual camera lens onto the projection plane (the virtual ``film'') and into the scene. At every intersection point with a surface the outgoing illumination is evaluated.
 
-This may seem odd at first since in reality light propagades \emph{from} the light sources to the film in the camera. The correctness of this method follows directly from \emph{Hemholtz reciprocity} \parencite{hapke93} which states that in vaccum or in a passive medium light paths can be reversed without affecting the measurement of flux.
+This may seem odd at first since in reality light propagates \emph{from} the light sources to the film in the camera. The correctness of this method follows directly from \emph{Hemholtz reciprocity} \parencite{hapke93} which states that in vacuum or in a passive medium light paths can be reversed without affecting the measurement of flux.
 
 Tracing rays from the camera is often called \emph{backwards raytracing} while tracing from the light sources is called \emph{forward raytracing}. The main drawback of forward raytracing algorithms is that many computed light paths don't hit the camera film at all and thus only small fraction contribute to the final image.
 
@@ -43,7 +43,7 @@ For every reflective or transmittive surface at each intersection point another 
 \KwData{Ray $r$, set of surface elements $S$, set of light sources $L$.}
 \KwResult{Outgoing illumination $I$.}
 $I \leftarrow 0$ \\
-\If{$r$ interesects with any $s \in S$}{
+\If{$r$ intersects with any $s \in S$}{
   $x \leftarrow$ find the nearest intersection point \\
   \For{every light $l \in L$}{
     \If{light $l$ is unoccluded from point $x$}{
@@ -71,7 +71,7 @@ A very important part of every raytracer is testing whether a given ray intersec
   where $t > 0$.
 \end{df}
 
-Aurora implements two types of primitives: \emph{triangles} which are renderable primitives used to represent 3D scene surfaces as triangle meshes and \emph{axis-aligned slabs} which are non-renderable primitives used during the traversal of spatial triangle hierarchy. 
+Aurora implements two types of primitives: \emph{triangles} which are renderable primitives used to represent 3D scene surfaces as triangle meshes and \emph{axis-aligned slabs} which are non--renderable primitives used during the traversal of spatial triangle hierarchy. 
 
 \subsection{Ray--triangle intersection}
 Compact triangle representation is a key factor in increasing geometry streaming throughput from global memory during rendering on the GPU via CUDA. It is therefore natural to utilize ray/triangle intersection test that does not require extra precomputed data besides triangle vertices. Such test was proposed in \cite{mt97} and it is the algorithm implemented in Aurora.
@@ -116,22 +116,22 @@ and similarly for $S_{\max}$:
 \end{equation}
 Ray $r(t)$ then intersects slab $S$ if and only if $t_{\min} \le t_{\max}$.
 
-Note that the \texttt{IEEE754} standard for floating point arithmetic guarantees that the result of this interesection test will be correct even when $d_{x}=0$. A ray coplanar with the $YZ$ plane intersects slab $S$ at either $+\infty$ or $-\infty$.
+Note that the \texttt{IEEE754} standard for floating point arithmetic guarantees that the result of this intersection test will be correct even when $d_{x}=0$. A ray coplanar with the $YZ$ plane intersects slab $S$ at either $+\infty$ or $-\infty$.
 
 Cases for $OY$ and $OZ$ aligned slabs are identical and omitted here for brevity.
 
 \section{The No--Memory Hierarchy}
 \label{sec:nmh}
-Testing for ray/scene intersection can be very costly. Assuming scene surfaces consist of triangle meshes the naive approach would be to test every triangle and choose the nearest intersection point. For large number of triangles and rays this is higly impractical as the algorithmic complexity is $O(mn)$ where $m$ is the number of rays and $n$ is the number of triangles. Typical rendering scenario consist of tracing millions of rays through a scene with thousands or even millions of triangles. The computational cost of naive intersection testing is clearly prohibitive.
+Testing for ray/scene intersection can be very costly. Assuming scene surfaces consist of triangle meshes the naive approach would be to test every triangle and choose the nearest intersection point. For large number of triangles and rays this is highly impractical as the algorithmic complexity is $O(mn)$ where $m$ is the number of rays and $n$ is the number of triangles. Typical rendering scenario consist of tracing millions of rays through a scene with thousands or even millions of triangles. The computational cost of naive intersection testing is clearly prohibitive.
 
 The basic idea of ``accelerating'' ray intersection tests in large scenes is to use some sort of auxiliary spatial data structure that can lower the complexity by testing only a fraction of scene primitives for each ray. Examples of such structures include bounding volume hierarchies, $kd$-trees and sparse voxel grids. Unfortunately in each case the additional data structure significantly increases memory requirements.
 
-The No-Memory Hierarchy or NMH \parencite{eisemann2012} is a method of spatialy sorting triangles to implicitly represent the acceleration strucutre within the geometry data with no need for addtional memory during traversal. The computational complexity of ray/scene intersection when using NMH is $O(m \log n)$ for $m$ rays and $n$ triangles and the additional memory complexity is $O(\log n)$ because of the recursion stack.
+The No-Memory Hierarchy or NMH \parencite{eisemann2012} is a method of spatially sorting triangles to implicitly represent the acceleration structure within the geometry data with no need for additional memory during traversal. The computational complexity of ray/scene intersection when using NMH is $O(m \log n)$ for $m$ rays and $n$ triangles and the additional memory complexity is $O(\log n)$ because of the recursion stack.
 
 \subsection{Representation and traversal}
 The NMH is a complete, left-balanced binary tree recursively partitioning the geometry of the scene into two disjoint subsets. Each tree node consists of two triangles, continuously mapped in memory, that implicitly define a bounding primitive.
 
-To find an intersection of a ray with the scene geometry the hierarchy is traversed in breath-first order. At each node bounding primitive is recostructed from the bounding triangles. If the query ray intersects with the bounding primitive both bounding triangles are tested for intersection as well and any existing child nodes are enqueued for visiting. If the query ray misses the bounding primitive the current node is skipped.
+To find an intersection of a ray with the scene geometry the hierarchy is traversed in breath-first order. At each node bounding primitive is reconstructed from the bounding triangles. If the query ray intersects with the bounding primitive both bounding triangles are tested for intersection as well and any existing child nodes are enqueued for visiting. If the query ray misses the bounding primitive the current node is skipped.
 
 The bounding primitive for each node is a slab along one of the coordinate axis. The axis is chosen in a round-robin fashion depending on the depth in the tree, starting from $OX$ at the root node (depth zero). Extents of the bounding slab are defined by minimal and maximal triangle vertex along that axis. The bounding slab with active ray interval approximate an axis-aligned bounding box for the current node.
 
@@ -140,7 +140,7 @@ The hierarchy is stored as a continuous array of triangles in memory and can be 
 \subsection{Construction}
 Parallel GPU construction of NMH in Aurora is based on the algorithm described in section 4 of \cite{eisemann2012}.
 
-The NMH construction procedure expects the number of triangles in the scene to be even. If the number of triangles is odd the last triangle is duplicated before construction begins. Let $N$ be the number of triangles after duplication. For performance reasons the algorithm does not operate directly on triangle data; triangle index array $T$ is used instead. A number of other helper buffers are also required: auxiliary index array $I$ of length $N$ which stores the current node index in the hierarchy and two split lists $S_{i}, S_{o}$ of length at most $N/2$ each, carrying information about the starting index and the size of each active partition. Memory complexity of NMH construction is therefore $O(N)$.
+The NMH construction procedure expects the number of triangles in the scene to be even. If the number of triangles is odd the last triangle is duplicated before construction begins. Let $N$ be the number of triangles after duplication. For performance reasons the algorithm does not operate directly on triangle data; triangle index array $T$ is used instead. A number of other helper buffers is also required: auxiliary index array $I$ of length $N$ which stores the current node index in the hierarchy and two split lists $S_{i}, S_{o}$ of length at most $N/2$ each, carrying information about the starting index and the size of each active partition. Memory complexity of NMH construction is therefore $O(N)$.
 
 At the start $T$ is set to identity permutation $(0, 1, \dots, N-1)$ and $I$ is initialized to zeroes. The input split list $S_{i}$ contains a single active split with starting index $0$ and size $N$ and the bounding axis is set to $OX$.
 
@@ -148,16 +148,16 @@ The algorithm then loops over all $\lfloor \log_{2}(N/2) \rfloor + 1$ levels of 
 
 The construction steps are as follows:
 \begin{enumerate}
-\item Arrays $T$ and $I$ are sorted by each triangle's minimum vertex position along the bounding axis and then stable sort is applied according to the index arrray $I$. After the first sort the triangles are sorted according to their spatial position. The second sort arranges triangles of the same node together without changing their relative position. For the last level of the hierarchy it is the final step.
+\item Arrays $T$ and $I$ are sorted by each triangle's minimum vertex position along the bounding axis and then stable sort is applied according to the index array $I$. After the first sort the triangles are sorted according to their spatial position. The second sort arranges triangles of the same node together without changing their relative position. For the last level of the hierarchy it is the final step.
 \item In each active split the maximum triangle along the current bounding axis is found and swapped to the second position. The first is already the minimum bounding triangle due to sorting.
 \item The index array $I$ is now updated. Let $D$ be the number of already created nodes and $i$ be the index of the split in the split list. The first two triangles of each active split are assigned a value of $D+i$. Other triangles in the split are assigned $2(D+i)+1$.
-\item For each active split in the input split list $S_{i}$ up to two new splits are emitted into the output split list $S_{o}$. Let $n_{S}$ be the number of active splits and $p_{i}$, $n_{i}$ the position and size of i'th split. The sizes $nL_{i}$ and $nR_{i}$ of the new splits are computed from $n_{i}$ as described in listing \ref{lst:calcpartition}. The starting positions of the new splits are then $pL_{i} = p_{i} + 2(n_{S} - i)$ and $pR_{i} = pL_{i} + nL_{i}$. If either $nL_{i} \le 0$ or $nR_{i} \le 0$ the corresponding split is not created.
+\item For each active split in the input split list $S_{i}$ up to two new splits are emitted into the output split list $S_{o}$. Let $n_{S}$ be the number of active splits and $p_{i}$, $n_{i}$ the position and size of $i$'th split. The sizes $nL_{i}$ and $nR_{i}$ of the new splits are computed from $n_{i}$ as described in listing \ref{lst:calcpartition}. The starting positions of the new splits are then $pL_{i} = p_{i} + 2(n_{S} - i)$ and $pR_{i} = pL_{i} + nL_{i}$. If either $nL_{i} \le 0$ or $nR_{i} \le 0$ the corresponding split is not created.
 \item The bounding axis is incremented and the loop continues.
 \end{enumerate}
 \begin{lstlisting}[
   label={lst:calcpartition},
   language=C++,
-  caption=Partition size calculation resulting in left-balanced object-median split of the triangles. The \texttt{log2i} function returns integer base 2 logarithm.]
+  caption=Partition size calculation resulting in left--balanced object--median split of the triangles. The \texttt{log2i} function returns integer base 2 logarithm.]
 void calcPartition(int N, int& L, int& R)
 {
   int H = log2i(N/2);
@@ -173,19 +173,19 @@ After the loop is finished the scene geometry data is permuted according to the 
 \section{Scene data}
 
 \subsection{Geometry}
-Input geometry suitable for rendering is in the form of a uniform triangle stream assembled from all the meshes in the scene. Each triangle vertex is described by its position and normal vector in world space, 2D texture coordinate and generated tangent and bitangent vectors. Additionaly an index into the shader array is stored per-triangle for the purpose of preserving shader to mesh assignment.
+Input geometry suitable for rendering is in the form of a uniform triangle stream assembled from all the meshes in the scene. Each triangle vertex is described by its position and normal vector in world space, 2D texture coordinate and generated tangent and bitangent vectors. Additionally an index into the shader array is stored per-triangle for the purpose of preserving shader to mesh assignment.
 
-Geometry data is converted from internal Maya representation to a specialized structure-of-arrays (SOA) format optimised for coherent access in CUDA kernels. The Maya-to-Aurora conversion is a two-step process:
+Geometry data is converted from internal Maya representation to a specialized structure-of-arrays (SOA) format optimized for coherent access in CUDA kernels. The Maya-to-Aurora conversion is a two-step process:
 \begin{enumerate}
 \item The CPU thread traverses Maya scene graph and retrieves geometry information from all triangle meshes on the scene assembling the geometry in the SOA format in a special intermediate \emph{staging buffer}. Vertex positions and normals are retrieved in object space. For every triangle mesh the object-to-world transformation matrix and it's inverse-transpose are stored and this transformation is assigned to a range of triangles corresponding to the current mesh. This way the mapping between transformations and triangle intervals in the staging buffer is preserved.
 \item A CUDA kernel is run that transforms vertices and normals from the staging buffer into world space and writes out the result to the GPU memory. Texture coordinates and shader indices are copied as-is.
 \end{enumerate}
-The staging buffer is allocated as host-pinned page-locked memory mapped to the address space of the GPU. This increases performance of the host-to-device upload and transform and allows CUDA kernels to access the staging buffer without introducing additional intermediate stage.
+The staging buffer is allocated as host--pinned page--locked memory mapped to the address space of the GPU. This increases performance of the host--to--device upload and transform and allows CUDA kernels to access the staging buffer without introducing additional intermediate stage.
 
 After the geometry is uploaded into the GPU memory the NMH is constructed and tangent and bitangent vectors are precalculated. At this point it is ready for rendering.
 
 \subsection{Textures}
-Textures are stored as 2D CUDA arrays with no stride or padding. Each pixel is in 8 bit per channel RGBA format and is assumed to be in non gamma-corrected linear colorspace. Before rendering, each texture array is assigned to a floating point texture sampler. At the time of writing a maximum number of 32 texture samplers is supported due to a limitation of CUDA 4.2.
+Textures are stored as 2D CUDA arrays with no stride or padding. Each pixel is in 8 bit per channel RGBA format and is assumed to be in non gamma-corrected linear color space. Before rendering, each texture array is assigned to a floating point texture sampler. At the time of writing a maximum number of 32 texture samplers is supported due to a limitation of CUDA 4.2.
 
 During rendering texture pixels are sampled with linear interpolation and in full 32-bit per channel floating point precision. The alpha channel is ignored however since the renderer does not support alpha blending.
 
@@ -202,15 +202,15 @@ All light types implement the following common interface:\footnote{Function defi
 Common attributes for all lights include \emph{illumination color} and \emph{intensity}.\footnote{This is not intensity in a strict physical sense rather a simple brightness factor. This slight abuse of terminology is prevalent in computer graphics.}
 
 \subsection{Point light}
-An isotropic point light emits light from a single point in space equally in all directions. A perfect point light is physicaly implausable nevertheless it is fair approximation of a very small light source. The brightness of a point light falls off with an inverse square of the distance between the illuminated point and the light position.
+An isotropic point light emits light from a single point in space equally in all directions. A perfect point light is physically implausible; nevertheless it is fair approximation of a very small light source. The brightness of a point light falls off with an inverse square of the distance between the illuminated point and the light position.
 
 \subsection{Directional light}
-Directional light, also called \emph{distant light}, illuminates the scene from infinity in a single direction with constant brightness. A good example of a real-life directional light is the Sun which is so far away from Earth that all the light rays emmited from it are parallel to each other.
+Directional light, also called \emph{distant light}, illuminates the scene from infinity in a single direction with constant brightness. A good example of a real-life directional light is the Sun which is so far away from Earth that all the light rays emitted from it are parallel to each other.
 
 \subsection{Area light}
-Area light is an arbitrary light emitting surface. In Aurora, due to compatibility with Maya's built-in light types, area lights are rectangles oriented in space illuminating the scene in the direction of the rectangle's normal vector. It is the only supported non-delta light. 
+Area light is an arbitrary light emitting surface. In Aurora, due to compatibility with Maya's built-in light types, area lights are rectangles oriented in space, illuminating the scene in the direction of the rectangle's normal vector. It is the only supported non-delta light. 
 
-Area lights causes objects in the scene to cast soft-shadows although that requires considerable amount of samples to look noise-free and thus significantly slows down rendering.
+Area lights cause objects in the scene to cast soft-shadows. However that requires considerable amount of samples to look noise--free and thus significantly slows down rendering.
 
 Area light interface defines additional function \texttt{float3 L(float3 w)} which returns incident radiance due to illumination from particular direction vector \texttt{w}.
 
@@ -228,7 +228,7 @@ Each of the above functions implicitly perform coordinate system conversion when
 \subsection{The shading coordinate system}
 Shading calculations in Aurora are performed in the \emph{shading coordinate system} which is a local frame of reference for a point $x(u,v)$ on the surface of a triangle, where $u$ an $v$ are barycentric coordinates.
 
-Let $N(x), T(x)$ and $B(x)$ be respectively: normal, tangent and bitangent vectors at point $x$ obtained from per-vertex data by barycentric interpolation and re-normalisation. The $T, B, N$ vectors form the orthonormal basis of shading coordinate system for point $x$ and the world space to shading space transformation matrix is
+Let $N(x), T(x)$ and $B(x)$ be respectively: normal, tangent and bitangent vectors at point $x$ obtained from per-vertex data by barycentric interpolation and re--normalization. The $T, B, N$ vectors form the orthonormal basis of shading coordinate system for point $x$ and the world space to shading space transformation matrix is
 \begin{equation}
   M_{s} = \left[
     \begin{array}{ccc}
@@ -240,7 +240,7 @@ Let $N(x), T(x)$ and $B(x)$ be respectively: normal, tangent and bitangent vecto
 \end{equation}
 In the shading coordinate system the normal vector points ``upwards'' along the $OZ$ axis and the tangent and bitangent vectors are aligned with $OX$ and $OY$ axes respectively. This simplifies many computations and is consistent with the coordinate system used by sampling routines derived in chapter \ref{ch:montecarlo}.
 
-Becasue $M_{s}$ is orthonormal the inverse shading space to world space transformation is
+Because $M_{s}$ is orthonormal the inverse shading space to world space transformation is
 \begin{equation}
   M_{w} = (M_{s})^{-1} = (M_{s})^{T}.
 \end{equation}
@@ -269,7 +269,7 @@ The camera generates a set of rays for raytracing the scene from its point of vi
 Although the pinhole camera is fairly easy to implement it does not have a physical lens model and effects like depth of field cannot be simulated with it.
 
 \subsection{Raytracing the scene}
-Outgoing illumination at all visible surfaces is estimated using distribution raytracing. Rays generated by the camera are traced in parallel on the GPU. At each intersection point the outgoing illumination is computed. If the hit surface was purely diffuse the ray path terminates. On the other hand if the ray hit a specular surface a new reflected ray is generated, traced recursively and its contribution, weighted by the surface reflectivity coefficient, is added to the computed illumination. When the recursion is finished the final color is written to the output buffer. Note that the recursion stack is seperate for each thread and needs to be stored in local memory.
+Outgoing illumination at all visible surfaces is estimated using distribution raytracing. Rays generated by the camera are traced in parallel on the GPU. At each intersection point the outgoing illumination is computed. If the hit surface was purely diffuse the ray path terminates. On the other hand if the ray hit a specular surface a new reflected ray is generated, traced recursively and its contribution, weighted by the surface reflectivity coefficient, is added to the computed illumination. When the recursion is finished, the final color is written to the output buffer. Note that the recursion stack is separate for each thread and needs to be stored in local memory.
 
 The total outgoing illumination $L_{o}$ at an intersection point is
 \begin{equation}

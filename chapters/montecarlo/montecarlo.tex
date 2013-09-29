@@ -1,6 +1,6 @@
 \chapter{Monte Carlo integration}
 \label{ch:montecarlo}
-Monte Carlo integration is a method of approximating the value of an integral which is difficult or impossible to solve analytically, thus it is usually the solution of choice for approximating the \emph{light transport equation} \footnote{While there are other valid approaches to solving the LTE such as finite element methods (e.g. radiosity), those are not in the scope of this work.}. Due to the high dimensionality of the LTE integral traditional numerical integration methods like quadrature rules are inefficient and converge very slowly to the approximate solution.
+Monte Carlo integration is a method of approximating the value of an integral which is difficult or impossible to solve analytically. It is therefore the solution of choice for approximating the \emph{light transport equation} \footnote{While there are other valid approaches to solving the LTE such as finite element methods (e.g. radiosity), those are not in the scope of this work.}. Due to the high dimensionality of the LTE integral traditional numerical integration methods like quadrature rules are inefficient and converge very slowly to the approximate solution.
 
 \section{The Monte Carlo estimator}
 Let $f: I \rightarrow \mathbb{R}$ be a real-valued function defined over the interval $I$ and $a,b \in I$. Monte Carlo integration is a mean to estimate the integral of the form:
@@ -20,7 +20,7 @@ Rearranging the terms of equation \ref{eq:meanvalue} yields:
 \begin{equation}
   \int_{a}^{b} f(x)dx = (b-a) \cdot f(c) = F,
 \end{equation}
-which has simple interpretation that the area under the curve is the width of its base $(b-a)$ times the average ``height'' $f(c)$. To estimate the value of $f(c)$ one could evalute the function $f(x)$ at random points in the interval $[a,b]$ and compute the average of the sum of samples.
+which has simple interpretation that the area under the curve is the width of its base $(b-a)$ times the average ``height'' $f(c)$. To estimate the value of $f(c)$ one could evaluate the function $f(x)$ at random points in the interval $[a,b]$ and compute the average of the sum of samples.
 
 \begin{df}[Monte Carlo estimator]
   Let $X_{i} \in [a,b]$ be a random variable drawn from some distribution with probability density function $p(X_{i})$ and let $f: I \rightarrow \mathbb{R}$ be a function defined over the interval $I$, and $a,b \in I$. The Monte Carlo estimator has the form \parencite{veach97}:
@@ -56,7 +56,7 @@ The inversion method or the \emph{inverse transform sampling} \parencite{devroye
 If $\xi \in [0,1]$ is a uniform random variable, then $P^{-1}(\xi)$ has distribution function $P$.
 \end{thm}
 
-Let $\xi_{i}$ be a uniformly distributed random number obtained via some pseudo-random number generator (RNG). Given the above theorem it is possible to draw a sample $X_{i}$ from an arbitrary probability density function $p(x)$ by transforming $\xi_{i}$ in the following way:
+Let $\xi_{i}$ be a uniformly distributed random number obtained via some pseudo--random number generator (RNG). Given the above theorem it is possible to draw a sample $X_{i}$ from an arbitrary probability density function $p(x)$ by transforming $\xi_{i}$ in the following way:
 \begin{enumerate}
 \item Compute the cumulative distribution function $P(x) = \int_{-\infty}^{x} p(x') \,dx'$.
 \item Find the inverse $P^{-1}(x)$.
@@ -64,7 +64,7 @@ Let $\xi_{i}$ be a uniformly distributed random number obtained via some pseudo-
 \end{enumerate}
 
 \subsection{Transforming between distributions}
-When sampling from multidimensional distributions it is often useful to transform a random variable with some function $f$. For example one might wish to express solid angles in terms of points in spherical coordinates. When dealing with such transformations it is curcial to know the relationship between corresponding density functions.
+When sampling from multidimensional distributions it is often useful to transform a random variable with some function $f$. For example one might wish to express solid angles in terms of points in spherical coordinates. When dealing with such transformations it is crucial to know the relationship between corresponding density functions.
 
 Consider a pair of n-dimensional random variables $X$, $Y$ with corresponding probability density functions $p_{x}(x)$ and $p_{y}(y)$. Let $Y = T(X)$ where $T(x)=\langle T_{1}(x), \dots, T_{n}(x) \rangle$ is a bijection. The densities are then related by \parencite{phar2010}:
 \begin{equation}
@@ -88,11 +88,11 @@ The next step is to express the density function with respect to spherical coord
   p(\theta, \phi) \, d\theta d\phi &=& p(\omega) \,d\omega \nonumber \\
   p(\theta, \phi) &=& \sin\theta \,p(\omega),
 \end{eqnarray}
-subsituting for $p(\omega)$ yields
+substituting for $p(\omega)$ yields
 \begin{equation}
   p(\theta, \phi) = \sin\theta \,\frac{1}{2\pi}.
 \end{equation}
-It is easly seen that the two-dimensional density function $p(\theta, \phi)$ is seperable and thus can be expressed as a product of two one-dimensional densities: $p(\theta) = \sin\theta$ and $p(\phi) = \frac{1}{2\pi}$ which can be sampled independently using the inversion method.
+It is easily seen that the two-dimensional density function $p(\theta, \phi)$ is separable and thus can be expressed as a product of two one-dimensional densities: $p(\theta) = \sin\theta$ and $p(\phi) = \frac{1}{2\pi}$ which can be sampled independently using the inversion method.
 
 Computing the respective cumulative distribution functions:
 \begin{eqnarray}
@@ -104,7 +104,7 @@ and their inversions yields:
   \theta &=& P^{-1}(\theta) = \cos^{-1}(1 - \xi_{1}) \label{eq:2dsample_theta} \\
   \phi &=& P^{-1}(\phi) = 2\pi \xi_{2},
 \end{eqnarray}
-where $\xi_{1}$ and $\xi_{2}$ are random numbers drawn from standard uniform distribution. Note that if $\xi_{i}$ is uniformly distributed random number over $[0,1]$ then $1-\xi_{i}$ is also uniformly distributed. This can be used to further simplify equation \ref{eq:2dsample_theta}:
+where $\xi_{1}$ and $\xi_{2}$ are random numbers drawn from standard uniform distribution. Note that if $\xi_{i}$ is uniformly distributed random number over $[0,1)$ then $1-\xi_{i}$ is also uniformly distributed. This can be used to further simplify equation \ref{eq:2dsample_theta}:
 \begin{equation}
   \theta = \cos^{-1}(1-\xi_{1}) = \cos^{-1}(\xi_{1}).
 \end{equation}
@@ -154,7 +154,7 @@ therefore from equation \ref{eq:pdf_disk}:
   p(r, \theta) = \frac{r}{\pi}.
 \end{equation}
 
-Instead of deriving unit disk sampling formulae using the inversion method as before I will use the technique called \emph{concentric disk mapping} \parencite{shirley97}. Concentric map as opposed to traditional polar map is a \emph{low distortion} transformation preserving shapes and fractional areas.
+Instead of deriving unit disk sampling formulae using the inversion method as before I will use the technique called \emph{concentric disk mapping} \parencite{shirley97}. Concentric map, as opposed to traditional polar map, is a \emph{low distortion} transformation preserving shapes and fractional areas.
 
 Consider a pair $\xi_{1}$, $\xi_{2}$ of random numbers drawn from standard uniform distribution and function $f$ mapping $\langle \xi_{1}, \xi_{2} \rangle$ onto $[-1,1]^{2}$ square:
 \begin{equation}
@@ -172,7 +172,7 @@ The rate of convergence of Monte Carlo integration is highly dependent of how cl
 
 Recall that the scattering part of the LTE is weighted by the $\cos\theta$ term therefore a probability density function such that $p(\omega) \propto \cos\theta$ is desirable.
 
-A method to achievie a cosine weighted hemispherical distribution is to uniformly sample a unit disk and then generate direction vectors by projecting the sampled points along the $z$ axis onto unit hemisphere above the disk.
+A method to achieve a cosine weighted hemispherical distribution is to uniformly sample a unit disk and then generate direction vectors by projecting the sampled points along the $z$ axis onto unit hemisphere above the disk.
 Let $\langle u, v \rangle$ be a uniformly chosen point on a unit disk. The sampling formulae is then \parencite{shirley97}:
 \begin{eqnarray}
   x &=& u \nonumber \\
